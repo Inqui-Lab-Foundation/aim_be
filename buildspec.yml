@@ -1,9 +1,11 @@
 version: 0.2
 
+run-as: ubuntu
+
 phases:
   install:
     runtime-versions:
-      nodejs: 14
+      nodejs: 16.x
   pre_build:
     commands:
       - echo Installing source NPM dependencies...
