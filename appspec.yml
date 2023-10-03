@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /home/ubuntu/aim_be
+    destination: /home/ubuntu/unisolve_be
 file_exists_behavior: OVERWRITE
 hooks:
   BeforeInstall:
