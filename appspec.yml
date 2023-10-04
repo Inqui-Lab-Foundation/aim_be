@@ -2,7 +2,8 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /home/ubuntu/unisolve_be
+    destination: /home/ubuntu/aim_be
+    overwrite: yes
 file_exists_behavior: OVERWRITE
 hooks:
   BeforeInstall:
@@ -17,6 +18,7 @@ permissions:
   - object: /home/ubuntu
     owner: ubuntu
     group: ubuntu
+    pattern: "**"
     type:
       - directory
       - file
