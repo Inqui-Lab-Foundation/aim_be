@@ -32,6 +32,9 @@ export default class OrganizationController extends BaseController {
     protected initializeRoutes(): void {
         this.router.post(`${this.path}/bulkUpload`, this.bulkUpload.bind(this));
         this.router.get(`${this.path}/districts`, this.getGroupByDistrict.bind(this));
+        this.router.get(`${this.path}/states`, this.getGroupByState.bind(this));
+        this.router.get(`${this.path}/pinCode`, this.getGroupBypinCode.bind(this));
+        this.router.get(`${this.path}/ATLCode`, this.getGroupByATLCode.bind(this));
         this.router.post(`${this.path}/checkOrg`, validationMiddleware(organizationCheckSchema), this.checkOrgDetails.bind(this));
         this.router.post(`${this.path}/createOrg`, validationMiddleware(organizationRawSchema), this.createOrg.bind(this));
         this.router.post(`${this.path}/login`,this.login.bind(this));
@@ -178,6 +181,56 @@ export default class OrganizationController extends BaseController {
     private async getGroupByDistrict(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let response: any = [];
+            const { state } = req.query;
+            const { model } = req.params;
+            if (model) {
+                this.model = model;
+            };
+            const modelClass = await this.loadModel(model).catch(error => {
+                next(error)
+            });
+            let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
+            let result: any =[];
+            if(state){
+                result = await this.crudService.findAll(modelClass, {
+                    attributes: [
+                        'district'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            objWhereClauseStatusPart.whereClauseStatusPart,{'state':state}
+                        ]
+                    },
+                    group: ['district']
+                });
+
+            }else{
+                result = await this.crudService.findAll(modelClass, {
+                    attributes: [
+                        'district'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            objWhereClauseStatusPart.whereClauseStatusPart
+                        ]
+                    },
+                    group: ['district']
+                });
+                response.push('All Districts');
+            }
+            
+            result.forEach((obj: any) => {
+                response.push(obj.dataValues.district)
+            });
+            return res.status(200).send(dispatcher(res, response, 'success'));
+        } catch (error) {
+            console.log(error)
+            next(error);
+        }
+    }
+    private async getGroupByState(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let response: any = [];
             const { model } = req.params;
             if (model) {
                 this.model = model;
@@ -188,19 +241,85 @@ export default class OrganizationController extends BaseController {
             let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
             const result = await this.crudService.findAll(modelClass, {
                 attributes: [
-                    'district'
+                    'state'
                 ],
                 where: {
                     [Op.and]: [
                         objWhereClauseStatusPart.whereClauseStatusPart
                     ]
                 },
-                group: ['district']
+                group: ['state'],
+                order:['state']
             });
-            response.push('All Districts');
+            response.push('All States');
             result.forEach((obj: any) => {
-                response.push(obj.dataValues.district)
+                response.push(obj.dataValues.state)
             });
+            return res.status(200).send(dispatcher(res, response, 'success'));
+        } catch (error) {
+            console.log(error)
+            next(error);
+        }
+    }
+    private async getGroupBypinCode(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let response: any = [];
+            const { district } = req.query;
+            const { model } = req.params;
+            if (model) {
+                this.model = model;
+            };
+            const modelClass = await this.loadModel(model).catch(error => {
+                next(error)
+            });
+            let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
+                const result = await this.crudService.findAll(modelClass, {
+                    attributes: [
+                        'pin_code'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            objWhereClauseStatusPart.whereClauseStatusPart,{'district': district }
+                        ]
+                    },
+                    group: ['pin_code']
+                });
+                result.forEach((obj: any) => {
+                    response.push(obj.dataValues.pin_code)
+                });
+        
+            return res.status(200).send(dispatcher(res, response, 'success'));
+        } catch (error) {
+            console.log(error)
+            next(error);
+        }
+    }
+    private async getGroupByATLCode(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let response: any = [];
+            const { pin_code } = req.query;
+            const { model } = req.params;
+            if (model) {
+                this.model = model;
+            };
+            const modelClass = await this.loadModel(model).catch(error => {
+                next(error)
+            });
+            let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
+                const result = await this.crudService.findAll(modelClass, {
+                    attributes: [
+                        'organization_code'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            objWhereClauseStatusPart.whereClauseStatusPart,{'pin_code': pin_code }
+                        ]
+                    }
+                });
+                result.forEach((obj: any) => {
+                    response.push(obj.dataValues.organization_code)
+                });
+        
             return res.status(200).send(dispatcher(res, response, 'success'));
         } catch (error) {
             console.log(error)

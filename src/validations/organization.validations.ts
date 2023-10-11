@@ -27,13 +27,14 @@ export const organizationRawSchema = Joi.object().keys({
     category: Joi.string().messages({
         'string.empty': speeches.CATEGORY_REQ
     }),
-    password: Joi.string(),
     principal_name: Joi.any(),
     principal_mobile: Joi.any(),
     principal_email: Joi.any(),
     city: Joi.any(),
     state: Joi.any(),
     country: Joi.any(),
+    pin_code: Joi.any(),
+    address: Joi.any(),
     status: Joi.string().valid(...Object.values(constents.organization_status_flags.list))
 });
 
@@ -59,6 +60,8 @@ export const organizationUpdateSchema = Joi.object().keys({
     principal_email: Joi.any(),
     city: Joi.any(),
     state: Joi.any(),
+    pin_code: Joi.any(),
+    address: Joi.any(),
     country: Joi.any()
 });
 export const organizationCheckSchema = Joi.object().keys({
