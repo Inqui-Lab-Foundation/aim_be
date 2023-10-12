@@ -124,7 +124,8 @@ export const speeches = {
     DISTRICT_REQ: "district is required.",
     CATEGORY_REQ:"category is required.",
     COUNTRY_REQ: "country  is required.",
-
+    PINCODE_REQ: "Pin Code is required.",
+    ADDRESS_REQ: "Address is required.",
     OTP_FAIL: "Wrong OTP Detected.",
     OTP_FOUND: "OTP matched.",
     QUERY_CATEGORY: "Category is required",
