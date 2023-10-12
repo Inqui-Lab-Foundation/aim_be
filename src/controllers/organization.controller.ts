@@ -12,11 +12,10 @@ import BaseController from "./base.controller";
 import { organizationCheckSchema, organizationRawSchema, organizationSchema, organizationUpdateSchema } from "../validations/organization.validations";
 import authService from "../services/auth.service";
 import validationMiddleware from "../middlewares/validation.middleware";
-import { Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 import { constant } from "lodash";
 import { constents } from "../configs/constents.config";
-import bcrypt from 'bcrypt';
-import { baseConfig } from '../configs/base.config';
+import db from "../utils/dbconnection.util";
 
 export default class OrganizationController extends BaseController {
 
@@ -328,10 +327,17 @@ export default class OrganizationController extends BaseController {
     }
     private async createOrg(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         // console.log(req.body);
-        const orgCode = req.body.organization_code;
-        const leve1CryptoEncryptedString = await this.authService.generateCryptEncryption(orgCode);
-        const pass = await bcrypt.hashSync(leve1CryptoEncryptedString, process.env.SALT || baseConfig.SALT);
-        req.body['password'] = pass;
-        return this.createData(req, res, next);
+        const {nonatlcode} = req.query;
+        if(nonatlcode){
+            const orgcode = req.body.organization_code;
+            const findOrgCode  = await db.query(`SELECT count(*) as orgCount  FROM organizations where organization_code like '${orgcode}-%';`,{ type: QueryTypes.SELECT });
+            const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(),10)+1;
+            const ATLCode = `${orgcode}-${countINcrement}`
+            req.body.organization_code = ATLCode;
+            return this.createData(req, res, next);
+        }else {
+            return this.createData(req, res, next);
+        }
+        
     }
 }
