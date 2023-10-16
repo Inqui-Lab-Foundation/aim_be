@@ -247,21 +247,17 @@ export default class StudentController extends BaseController {
             where[`${this.model}_id`] = req.params.id;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
-            if (req.body.full_name || req.body.team_id) {
-                if (req.body.full_name.trim() != studentTableDetails.getDataValue("full_name").trim() || req.body.team_id != studentTableDetails.getDataValue("team_id")) {
+            if (req.body.username) {
+                if (req.body.full_name.trim() != studentTableDetails.getDataValue("full_name").trim()) {
 
-                    let trimmedTeamName: any;
-                    let trimmedStudentName: any;
-                    trimmedStudentName = req.body.full_name.replace(/[\n\r\s\t]+/g, '').toLowerCase();
-                    const studentPassword = `${trimmedStudentName}1234`
+                    const usernameforpass = req.body.username.split('@');
+                    const studentPassword = usernameforpass[0];
                     const cryptoEncryptedString = await this.authService.generateCryptEncryption(studentPassword);
                     const teamDetails = await this.authService.crudService.findOne(team, { where: { team_id: req.body.team_id } });
                     if (!teamDetails) {
                         return res.status(406).send(dispatcher(res, null, 'error', speeches.TEAM_NOT_FOUND, 406));
-                    } else {
-                        trimmedTeamName = teamDetails.dataValues.team_name.replace(/[\n\r\s\t\_]+/g, '').toLowerCase();
                     }
-                    const username = trimmedStudentName + '@' + trimmedTeamName;
+                    const username = req.body.username;
                     payload['qualification'] = cryptoEncryptedString
                     payload['UUID'] = studentPassword;
                     const studentDetails = await this.crudService.findOne(user, { where: { username: username } });
@@ -317,11 +313,9 @@ export default class StudentController extends BaseController {
     private async register(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             // const randomGeneratedSixDigitID = this.nanoid();
-            const { team_id } = req.body;
-            let trimmedTeamName: any;
-            let trimmedStudentName: any;
-            trimmedStudentName = req.body.full_name.replace(/[\n\r\s\t]+/g, '').toLowerCase();
-            const studentPassword = `${trimmedStudentName}1234`
+            const { team_id ,username} = req.body;
+            const usernameforpass = username.split('@');
+            const studentPassword = usernameforpass[0];
             const cryptoEncryptedString = await this.authService.generateCryptEncryption(studentPassword);
             if (!req.body.role || req.body.role !== 'STUDENT') return res.status(406).send(dispatcher(res, null, 'error', speeches.USER_ROLE_REQUIRED, 406));
             if (!req.body.team_id) return res.status(406).send(dispatcher(res, null, 'error', speeches.USER_TEAMID_REQUIRED, 406));
@@ -336,12 +330,10 @@ export default class StudentController extends BaseController {
             }
             const teamDetails = await this.authService.crudService.findOne(team, { where: { team_id } });
             if (!teamDetails) return res.status(406).send(dispatcher(res, null, 'error', speeches.TEAM_NOT_FOUND, 406));
-            else trimmedTeamName = teamDetails.dataValues.team_name.replace(/[\n\r\s\t\_]+/g, '').toLowerCase();
-            if (!req.body.username || req.body.username === "") {
-                req.body.username = trimmedStudentName + '@' + trimmedTeamName
+            else
                 req.body['UUID'] = studentPassword;
                 req.body.qualification = cryptoEncryptedString // saving the encrypted text in the qualification as for now just for debugging
-            }
+
             if (!req.body.password || req.body.password === "") req.body.password = cryptoEncryptedString;
             const payload = this.autoFillTrackingColumns(req, res, student)
             const result = await this.authService.register(payload);
@@ -369,8 +361,7 @@ export default class StudentController extends BaseController {
                     }
                 }
             }
-            let trimmedTeamName: any;
-            let trimmedStudentName: any;
+            let usernameforpass: any; 
             let studentPassword: any;
             let cryptoEncryptedString: any;
             const teamName = await this.authService.crudService.findOne(team, {
@@ -379,11 +370,9 @@ export default class StudentController extends BaseController {
             if (!teamName) throw notFound(speeches.TEAM_NOT_FOUND, 406);
             if (teamName instanceof Error) throw teamName;
             for (let student in req.body) {
-                trimmedStudentName = req.body[student].full_name.replace(/[\n\r\s\t]+/g, '').toLowerCase();
-                trimmedTeamName = teamName.dataValues.team_name.replace(/[\n\r\s\t\_]+/g, '').toLowerCase();
-                studentPassword = `${trimmedStudentName}1234`
+                const usernameforpass = req.body[student].username.split('@');
+                studentPassword = usernameforpass[0];
                 cryptoEncryptedString = await this.authService.generateCryptEncryption(studentPassword);
-                req.body[student].username = trimmedStudentName + '@' + trimmedTeamName;
                 req.body[student].full_name = req.body[student].full_name.trim();
                 req.body[student].role = 'STUDENT';
                 req.body[student].UUID = studentPassword;
