@@ -206,7 +206,7 @@ export default class authService {
                 result = await this.crudService.create(student, payload);
                 successResponse.push(payload.full_name);
             } else {
-                errorResponse.push(payload.full_name);
+                errorResponse.push(payload.username);
             }
         };
         let successMsg = successResponse.length ? successResponse.join(', ') + " successfully created. " : ''
