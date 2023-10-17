@@ -307,7 +307,8 @@ export default class OrganizationController extends BaseController {
             let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
                 const result = await this.crudService.findAll(modelClass, {
                     attributes: [
-                        'organization_code'
+                        'organization_code',
+                        'organization_name'
                     ],
                     where: {
                         [Op.and]: [
@@ -315,11 +316,7 @@ export default class OrganizationController extends BaseController {
                         ]
                     }
                 });
-                result.forEach((obj: any) => {
-                    response.push(obj.dataValues.organization_code)
-                });
-        
-            return res.status(200).send(dispatcher(res, response, 'success'));
+            return res.status(200).send(dispatcher(res, result, 'success'));
         } catch (error) {
             console.log(error)
             next(error);

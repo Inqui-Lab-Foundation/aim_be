@@ -248,15 +248,9 @@ export default class StudentController extends BaseController {
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
             if (req.body.username) {
-                if (req.body.full_name.trim() != studentTableDetails.getDataValue("full_name").trim()) {
-
                     const usernameforpass = req.body.username.split('@');
                     const studentPassword = usernameforpass[0];
                     const cryptoEncryptedString = await this.authService.generateCryptEncryption(studentPassword);
-                    const teamDetails = await this.authService.crudService.findOne(team, { where: { team_id: req.body.team_id } });
-                    if (!teamDetails) {
-                        return res.status(406).send(dispatcher(res, null, 'error', speeches.TEAM_NOT_FOUND, 406));
-                    }
                     const username = req.body.username;
                     payload['qualification'] = cryptoEncryptedString
                     payload['UUID'] = studentPassword;
@@ -264,7 +258,7 @@ export default class StudentController extends BaseController {
                     // console.log(studentDetails);
 
                     if (studentDetails) {
-                        if (studentDetails.dataValues.username == username) throw badRequest(speeches.USER_FULLNAME_EXISTED);
+                        if (studentDetails.dataValues.username == username) throw badRequest(speeches.USER_EMAIL_EXISTED);
                         if (studentDetails instanceof Error) throw studentDetails;
                     };
                     const user_data = await this.crudService.update(user, {
@@ -278,6 +272,16 @@ export default class StudentController extends BaseController {
                     if (user_data instanceof Error) {
                         throw user_data;
                     }
+            }
+            if (req.body.full_name) {
+                const user_data = await this.crudService.update(user, {
+                    full_name: payload.full_name
+                }, { where: { user_id: studentTableDetails.getDataValue("user_id") } });
+                if (!user_data) {
+                    throw internal()
+                }
+                if (user_data instanceof Error) {
+                    throw user_data;
                 }
             }
             const student_data = await this.crudService.updateAndFind(modelLoaded, payload, { where: where });
@@ -456,12 +460,11 @@ export default class StudentController extends BaseController {
         // now reset password use case is to change to student_use_full_name123 and update the UUID 
         const { user_id } = req.body;
         if (!user_id) throw badRequest(speeches.USER_USERID_REQUIRED);
-        let trimmedStudentName: any;
         const findUser: any = await this.crudService.findOne(user, { where: { user_id } });
         if (!findUser) throw badRequest(speeches.USER_NOT_FOUND);
-        if (findUser instanceof Error) throw findUser;
-        trimmedStudentName = findUser.dataValues.full_name.replace(/[\n\r\s\t]+/g, '').toLowerCase();
-        const studentPassword = `${trimmedStudentName}1234`
+        if (findUser instanceof Error) throw findUser; 
+        const usernameforpass = findUser.dataValues.username.split('@');
+        const studentPassword = usernameforpass[0];
         const cryptoEncryptedString = await this.authService.generateCryptEncryption(studentPassword);
         try {
             req.body['username'] = findUser.dataValues.username;
