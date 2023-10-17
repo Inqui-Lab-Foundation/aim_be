@@ -16,11 +16,19 @@ export const teamSchema = Joi.object().keys({
     }),
     team_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN).required().messages({
         'string.empty': speeches.NAME_REQUIRED
-    })
+    }),
+    moc_name: Joi.string(),
+    moc_gender: Joi.string(),
+    moc_email: Joi.string(),
+    moc_phone: Joi.string()
 });
 export const teamUpdateSchema = Joi.object().keys({
     status: Joi.string().trim().min(1).valid(...Object.values(constents.common_status_flags.list)).required(),
     team_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN).required().messages({
         'string.empty': speeches.NAME_REQUIRED
-    })
+    }),
+    moc_name: Joi.string(),
+    moc_gender: Joi.string(),
+    moc_email: Joi.string(),
+    moc_phone: Joi.string()
 });

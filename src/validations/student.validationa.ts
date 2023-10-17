@@ -52,6 +52,5 @@ export const studentUpdateSchema = Joi.object().keys({
     Grade: Joi.string(),
     team_id: Joi.string(),
     disability: Joi.string(),
-    mentor_details: Joi.string(),
     Gender: Joi.string().valid(...Object.values(constents.gender_flags.list))
 });

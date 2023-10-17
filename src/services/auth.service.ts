@@ -608,15 +608,14 @@ export default class authService {
     async triggerOtpMsg(mobile: any,template_id:any) {
         try {
             let otp
-            if(process.env.MOBILE_SMS_URl != ""){
-                otp = await axios.get(`${process.env.MOBILE_SMS_URl}${mobile}&template_id=${template_id}`)
-                return otp.data.otp;
-            }
-            else{
+            // if(process.env.MOBILE_SMS_URl != ""){
+            //     otp = await axios.get(`${process.env.MOBILE_SMS_URl}${mobile}&template_id=${template_id}`)
+            //     return otp.data.otp;
+            // }
+            // else{
                 //otp = Math.random().toFixed(6).substr(-6);
                 otp='112233' 
                 return otp;
-            }
         } catch (error: any) {
             return error
         }
