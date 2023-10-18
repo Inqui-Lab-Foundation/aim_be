@@ -15,7 +15,7 @@ export default class DashboardService extends BaseService {
         try {
             let uniqueDistricts: any;
             let bulkCreateArray: any = [];
-            uniqueDistricts = await this.crudService.findAll(organization, { group: ["district"] });
+            uniqueDistricts = await this.crudService.findAll(organization, { group: ["state"] });
             if (!uniqueDistricts || uniqueDistricts.length <= 0) {
                 console.log("uniqueDistricts", uniqueDistricts)
                 return
@@ -24,19 +24,19 @@ export default class DashboardService extends BaseService {
                 console.log("uniqueDistricts", uniqueDistricts)
                 return
             }
-            for (const district of uniqueDistricts) {
+            for (const state of uniqueDistricts) {
                 try {
-                    if (district.district === null) {
+                    if (state.state === null) {
                         continue
                     }
-                    const stats: any = await this.getMapStatsForDistrict(district.dataValues.district)
+                    const stats: any = await this.getMapStatsForDistrict(state.dataValues.state)
 
                     bulkCreateArray.push({
                         overall_schools: stats.schoolIdsInDistrict.length,
                         reg_schools: stats.registeredSchoolIdsInDistrict.length,
                         teams: stats.teamIdInDistrict.length,
                         ideas: stats.challengeInDistrict.length,
-                        district_name: district.district,
+                        state_name: state.state,
                         students: stats.studentsInDistric.length,
                         schools_with_teams: stats.schoolIdsInDistrictWithTeams.length
                     })
@@ -52,7 +52,7 @@ export default class DashboardService extends BaseService {
                 reg_schools: statsForAllDistrics.registeredSchoolIdsInDistrict.length,
                 teams: statsForAllDistrics.teamIdInDistrict.length,
                 ideas: statsForAllDistrics.challengeInDistrict.length,
-                district_name: "all",
+                state_name: "all",
                 students: statsForAllDistrics.studentsInDistric.length,
                 schools_with_teams: statsForAllDistrics.schoolIdsInDistrictWithTeams.length
             })
@@ -66,7 +66,7 @@ export default class DashboardService extends BaseService {
     }
     
     /**
-     * Get map stats data with based on district
+     * Get map stats data with based on state
      * @param argdistric String default set to null
      * @returns object
      */
@@ -83,7 +83,7 @@ export default class DashboardService extends BaseService {
 
             if (argdistric) {
                 whereClause = {
-                    district: argdistric,
+                    state: argdistric,
                 }
             }
 

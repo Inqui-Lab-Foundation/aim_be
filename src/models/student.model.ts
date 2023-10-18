@@ -23,6 +23,7 @@ export class student extends Model<InferAttributes<student>, InferCreationAttrib
     declare state: string;
     declare country: string;
     declare badges: string;
+    declare disability: string;
     declare certificate: number;
     declare status: Enumerator;
     declare created_by: number;
@@ -95,6 +96,9 @@ student.init(
             type: DataTypes.STRING
         },
         country: {
+            type: DataTypes.STRING
+        },
+        disability: {
             type: DataTypes.STRING
         },
         badges: {

@@ -576,9 +576,9 @@ export default class MentorController extends BaseController {
     }
     private async mobileOpt(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const { mobile } = req.body;
-            if (!mobile) {
-                throw badRequest(speeches.MOBILE_NUMBER_REQUIRED);
+            const { username } = req.body;
+            if (!username) {
+                throw badRequest(speeches.USER_EMAIL_REQUIRED);
             }
             const result = await this.authService.mobileotp(req.body);
             if (result.error) {

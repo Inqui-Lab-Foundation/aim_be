@@ -43,6 +43,7 @@ export const speeches = {
     USER_INACTIVE: "User is ditected as inactive",
     USER_ALREADY_EXISTED: "User already existed with the Email and Phone Number.",
     USER_FULLNAME_EXISTED: "Student full name already existed",
+    USER_EMAIL_EXISTED: "Student email already existed",
     USER_REGISTERED_SUCCESSFULLY: "User registered successfully",
     USER_LOGIN_SUCCESS: "Login Successful",
     USER_BADGES_LINKED: "Badge added to user successfully",
@@ -124,7 +125,8 @@ export const speeches = {
     DISTRICT_REQ: "district is required.",
     CATEGORY_REQ:"category is required.",
     COUNTRY_REQ: "country  is required.",
-
+    PINCODE_REQ: "Pin Code is required.",
+    ADDRESS_REQ: "Address is required.",
     OTP_FAIL: "Wrong OTP Detected.",
     OTP_FOUND: "OTP matched.",
     QUERY_CATEGORY: "Category is required",

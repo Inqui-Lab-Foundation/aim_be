@@ -21,18 +21,25 @@ export const organizationRawSchema = Joi.object().keys({
     organization_name: Joi.string().trim().min(1).required().messages({
         'string.empty': speeches.ORG_NAME_REQUIRED
     }),
-    district: Joi.string().messages({
+    district: Joi.string().required().messages({
         'string.empty': speeches.DISTRICT_REQ
     }),
-    category: Joi.string().messages({
+    category: Joi.string().required().messages({
         'string.empty': speeches.CATEGORY_REQ
     }),
-    password: Joi.string(),
+    state: Joi.string().required().messages({
+        'string.empty': speeches.STATE_REQ
+    }),
+    pin_code: Joi.string().required().messages({
+        'string.empty': speeches.PINCODE_REQ
+    }),
+    address: Joi.string().required().messages({
+        'string.empty': speeches.ADDRESS_REQ
+    }),
     principal_name: Joi.any(),
     principal_mobile: Joi.any(),
     principal_email: Joi.any(),
     city: Joi.any(),
-    state: Joi.any(),
     country: Joi.any(),
     status: Joi.string().valid(...Object.values(constents.organization_status_flags.list))
 });
@@ -59,6 +66,8 @@ export const organizationUpdateSchema = Joi.object().keys({
     principal_email: Joi.any(),
     city: Joi.any(),
     state: Joi.any(),
+    pin_code: Joi.any(),
+    address: Joi.any(),
     country: Joi.any()
 });
 export const organizationCheckSchema = Joi.object().keys({

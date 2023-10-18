@@ -29,6 +29,18 @@ team.init(
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),
             defaultValue: constents.common_status_flags.default
         },
+        moc_name: {
+            type: DataTypes.STRING,
+        },
+        moc_gender: {
+            type: DataTypes.STRING,
+        },
+        moc_email: {
+            type: DataTypes.STRING,
+        },
+        moc_phone: {
+            type: DataTypes.STRING,
+        },
         created_by: {
             type: DataTypes.INTEGER,
             allowNull: true,

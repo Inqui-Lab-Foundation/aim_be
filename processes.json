@@ -1,6 +1,6 @@
 [
     {
-        "name": "unisolve",
+        "name": "aim",
         "script": "./dist/src/index.js",
         "exec_mode": "cluster",
         "instances": "max",

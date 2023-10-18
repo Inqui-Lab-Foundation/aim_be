@@ -107,14 +107,14 @@ export default class authService {
     async mentorRegister(requestBody: any) {
         let response: any;
         try {
-            // const user_data = await this.crudService.findOne(user, { where: { username: requestBody.username } });
-            // if (user_data) {
-            //     throw badRequest('Email');
-            // } else {
-                const mentor_data = await this.crudService.findOne(mentor, { where: { mobile: requestBody.mobile } })
-                if (mentor_data) {
-                    throw badRequest('Mobile')
-                } else {
+            const user_data = await this.crudService.findOne(user, { where: { username: requestBody.username } });
+            if (user_data) {
+                throw badRequest('Email');
+            } else {
+                // const mentor_data = await this.crudService.findOne(mentor, { where: { mobile: requestBody.mobile } })
+                // if (mentor_data) {
+                //     throw badRequest('Mobile')
+                // } else {
                     let createUserAccount = await this.crudService.create(user, requestBody);
                     let conditions = { ...requestBody, user_id: createUserAccount.dataValues.user_id };
                     let createMentorAccount = await this.crudService.create(mentor, conditions);
@@ -206,7 +206,7 @@ export default class authService {
                 result = await this.crudService.create(student, payload);
                 successResponse.push(payload.full_name);
             } else {
-                errorResponse.push(payload.full_name);
+                errorResponse.push(payload.username);
             }
         };
         let successMsg = successResponse.length ? successResponse.join(', ') + " successfully created. " : ''
@@ -608,15 +608,14 @@ export default class authService {
     async triggerOtpMsg(mobile: any,template_id:any) {
         try {
             let otp
-            if(process.env.MOBILE_SMS_URl != ""){
-                otp = await axios.get(`${process.env.MOBILE_SMS_URl}${mobile}&template_id=${template_id}`)
-                return otp.data.otp;
-            }
-            else{
+            // if(process.env.MOBILE_SMS_URl != ""){
+            //     otp = await axios.get(`${process.env.MOBILE_SMS_URl}${mobile}&template_id=${template_id}`)
+            //     return otp.data.otp;
+            // }
+            // else{
                 //otp = Math.random().toFixed(6).substr(-6);
                 otp='112233' 
                 return otp;
-            }
         } catch (error: any) {
             return error
         }
