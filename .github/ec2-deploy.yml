@@ -1,0 +1,41 @@
+name: CI/CD counter app
+
+on:
+  push:
+    branches: [development]
+
+jobs:
+  #First we will see the application build or not , then we will deploy in EC2
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install
+        run: npm i -f
+
+      - name: Buid the application
+        run: npm run build
+
+  Deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy in EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.AIM_PRIVATE_KEY  }}
+          HOSTNAME: ${{ secrets.AIM_BE_HOSTNAME  }}
+
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${HOSTNAME} '
+
+            #Now we have got the access of EC2 and we will start the deploy .
+
+            cd /home/ubuntu/aim_be &&
+            git checkout development &&
+            git pull origin &&
+            npm i -f && npm run build && npm run start:prod && pm2 save -f
