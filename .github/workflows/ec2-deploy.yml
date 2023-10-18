@@ -6,7 +6,7 @@ on:
 
 jobs:
   #First we will see the application build or not , then we will deploy in EC2
-  build:
+  Build:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,15 +19,14 @@ jobs:
         run: npm run build
 
   Deploy:
-    needs: build
+    needs: Build
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
       - name: Deploy in EC2
         env:
           PRIVATE_KEY: ${{ secrets.AIM_PRIVATE_KEY  }}
-          HOSTNAME: ${{ secrets.AIM_BE_HOSTNAME  }}
+          HOSTNAME: ${{ secrets.AIM_DEV_HOSTNAME  }}
 
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
