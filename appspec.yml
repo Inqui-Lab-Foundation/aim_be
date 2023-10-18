@@ -18,7 +18,6 @@ permissions:
   - object: /home/ubuntu
     owner: ubuntu
     group: ubuntu
-    pattern: "**"
     type:
       - directory
       - file
