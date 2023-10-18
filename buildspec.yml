@@ -7,7 +7,7 @@ phases:
   pre_build:
     commands:
       - echo Installing source NPM dependencies...
-      - npm i -f
+      - npm install
   build:
      commands:
       - aws s3 cp s3://aim-cicd-1dcfcd7/dev/.env .
@@ -21,8 +21,8 @@ phases:
       
 artifacts:
   files:
-    - "**/*"
+    - '**/*'
 
 cache:
   paths:
-    - "node_modules/**/*"
+    - '/node_modules/**/*'
