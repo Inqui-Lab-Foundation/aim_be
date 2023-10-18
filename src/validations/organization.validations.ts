@@ -39,6 +39,7 @@ export const organizationRawSchema = Joi.object().keys({
     principal_name: Joi.any(),
     principal_mobile: Joi.any(),
     principal_email: Joi.any(),
+    unique_code:Joi.any(),
     city: Joi.any(),
     country: Joi.any(),
     status: Joi.string().valid(...Object.values(constents.organization_status_flags.list))
@@ -73,5 +74,10 @@ export const organizationUpdateSchema = Joi.object().keys({
 export const organizationCheckSchema = Joi.object().keys({
     organization_code: Joi.string().required().messages({
         'string.empty': speeches.ORG_CODE_REQUIRED
+    }),
+});
+export const uniqueCodeCheckSchema = Joi.object().keys({
+    unique_code: Joi.string().required().messages({
+        'string.empty': speeches.UNIQUE_CODE_REQUIRED
     }),
 });

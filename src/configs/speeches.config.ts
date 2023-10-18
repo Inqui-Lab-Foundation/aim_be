@@ -114,6 +114,7 @@ export const speeches = {
     FAQ_CATEGORY: "Category is required.",
     FAQ_ANSWER: "Answer is required.",
     ORG_CODE_REQUIRED: "Organization code is required.",
+    UNIQUE_CODE_REQUIRED: "Unique code is required.",
     ORG_CODE_NOT_EXISTS: "Organization code does not exists.",
     ORG_NAME_REQUIRED: "Organization name is required.",
 
