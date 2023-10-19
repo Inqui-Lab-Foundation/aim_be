@@ -314,7 +314,7 @@ export default class OrganizationController extends BaseController {
                     ],
                     where: {
                         [Op.and]: [
-                            objWhereClauseStatusPart.whereClauseStatusPart,{'pin_code': pin_code }
+                            objWhereClauseStatusPart.whereClauseStatusPart,{'pin_code': pin_code },{'category':'ATL'}
                         ]
                     }
                 });
