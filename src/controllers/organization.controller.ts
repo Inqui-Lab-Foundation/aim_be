@@ -9,13 +9,14 @@ import dispatcher from "../utils/dispatch.util";
 import ValidationsHolder from "../validations/validationHolder";
 import { videoSchema, videoUpdateSchema } from "../validations/video.validations";
 import BaseController from "./base.controller";
-import { organizationCheckSchema, organizationRawSchema, organizationSchema, organizationUpdateSchema } from "../validations/organization.validations";
+import { organizationCheckSchema, organizationRawSchema, organizationSchema, organizationUpdateSchema, uniqueCodeCheckSchema } from "../validations/organization.validations";
 import authService from "../services/auth.service";
 import validationMiddleware from "../middlewares/validation.middleware";
 import { Op, QueryTypes } from "sequelize";
 import { constant } from "lodash";
 import { constents } from "../configs/constents.config";
 import db from "../utils/dbconnection.util";
+import { organization } from "../models/organization.model";
 
 export default class OrganizationController extends BaseController {
 
@@ -39,6 +40,7 @@ export default class OrganizationController extends BaseController {
         this.router.post(`${this.path}/login`,this.login.bind(this));
         this.router.get(`${this.path}/logout`,this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
+        this.router.post(`${this.path}/checkUniqueCode`, validationMiddleware(uniqueCodeCheckSchema), this.checkUniqueDetails.bind(this));
         super.initializeRoutes();
     };
 
@@ -336,5 +338,26 @@ export default class OrganizationController extends BaseController {
             return this.createData(req, res, next);
         }
         
+    }
+    private async checkUniqueDetails(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+       try{
+        const org = await this.crudService.findOne(organization,{
+            where: {
+                unique_code: req.body.unique_code,
+                status: {
+                    [Op.or]: ['ACTIVE', 'NEW']
+                }
+            },
+        })
+        if (!org) {
+            res.status(400).send(dispatcher(res, null, 'error', speeches.BAD_REQUEST))
+        } else {
+            res.status(200).send(dispatcher(res, org, 'success', speeches.FETCH_FILE));
+        }
+       }catch (error) {
+        console.log(error)
+        next(error);
+    }
+       
     }
 }

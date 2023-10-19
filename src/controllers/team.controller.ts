@@ -31,6 +31,7 @@ export default class TeamController extends BaseController {
         this.router.get(`${this.path}/list`, this.getTeamsByMenter.bind(this));
         this.router.get(`${this.path}/namebymenterid`, this.getNameByMenter.bind(this));
         this.router.get(`${this.path}/listwithideaStatus`, this.getteamslistwithideastatus.bind(this));
+        this.router.get(`${this.path}/teamMentor`,this.getTeamMentor.bind(this));
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -404,6 +405,14 @@ export default class TeamController extends BaseController {
             next(error);
         }
     }
-    
+    protected async getTeamMentor(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try{
+            const {team_id} = req.query;
+            const result  = await db.query(`SELECT team_id,team_name,moc_name,moc_gender,moc_email,moc_phone FROM teams where team_id = ${team_id};`,{ type: QueryTypes.SELECT });
+            res.status(200).send(dispatcher(res, result, "success"))
+        }catch (error) {
+            next(error);
+        }
+    }
     
 }
