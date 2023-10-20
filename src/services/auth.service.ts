@@ -600,12 +600,12 @@ export default class authService {
         // return Math.random().toFixed(6).substr(-6);
         return this.otp;
     }
-    /**
+     /**
      * Trigger OTP Message to specific mobile
      * @param mobile Number
      * @returns Number
      */
-    async triggerOtpMsg(mobile: any,template_id:any) {
+     async triggerOtpMsg(mobile: any,template_id:any) {
         try {
             let otp
             // if(process.env.MOBILE_SMS_URl != ""){
@@ -663,15 +663,16 @@ export default class authService {
             ReplyToAddresses: [],
         };
         try {
-            // Create the promise and SES service object
-            let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
-            // Handle promise's fulfilled/rejected states
-            await sendPromise.then((data: any) => {
-                result['messageId'] = data.MessageId;
-                result['otp'] = otp;
-            }).catch((err: any) => {
-                throw err;
-            });
+            // // Create the promise and SES service object
+            // let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
+            // // Handle promise's fulfilled/rejected states
+            // await sendPromise.then((data: any) => {
+            //     result['messageId'] = data.MessageId;
+            //     result['otp'] = otp;
+            // }).catch((err: any) => {
+            //     throw err;
+            // });
+            result['otp'] = 112233;
             return result;
         } catch (error) {
             return error;
@@ -769,11 +770,11 @@ export default class authService {
                 throw badRequest('Email');
             }
             else{
-                const otp = await this.triggerOtpMsg(requestBody.mobile,1);
+                const otp = await this.triggerEmail(requestBody.username);
             if (otp instanceof Error) {
                 throw otp;
             }
-            result.data = otp
+            result.data = otp.otp
             return result;
             }
         } catch (error) {
@@ -799,7 +800,7 @@ export default class authService {
                 });
             } else {
                 mentor_res = await this.crudService.findOne(user, {
-                    where: { username: requestBody.mobile }
+                    where: { username: requestBody.email }
                 });
             }
             if (!mentor_res) {
@@ -813,7 +814,8 @@ export default class authService {
                 passwordNeedToBeUpdated['otp'] = requestBody.organization_code;
                 passwordNeedToBeUpdated["messageId"] = speeches.AWSMESSAGEID
             } else {
-                passwordNeedToBeUpdated['otp'] = await this.triggerOtpMsg(requestBody.mobile,2);
+                const otpOBJ = await this.triggerEmail(requestBody.email);
+                passwordNeedToBeUpdated['otp'] = otpOBJ.otp;
                 if (passwordNeedToBeUpdated instanceof Error) {
                     throw passwordNeedToBeUpdated;
                 }
