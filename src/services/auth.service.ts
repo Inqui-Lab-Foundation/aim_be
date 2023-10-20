@@ -764,12 +764,18 @@ export default class authService {
     async mobileotp(requestBody: any) {
         let result: any = {};
         try {
-            const otp = await this.triggerOtpMsg(requestBody.mobile,1);
+            const user_data = await this.crudService.findOne(user, { where: { username: requestBody.username } });
+            if (user_data) {
+                throw badRequest('Email');
+            }
+            else{
+                const otp = await this.triggerOtpMsg(requestBody.mobile,1);
             if (otp instanceof Error) {
                 throw otp;
             }
             result.data = otp
             return result;
+            }
         } catch (error) {
             result['error'] = error;
             return result;

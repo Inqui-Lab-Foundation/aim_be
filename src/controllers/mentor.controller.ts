@@ -219,7 +219,9 @@ export default class MentorController extends BaseController {
                             "district",
                             "state",
                             "country",
-                            "category"
+                            "category",
+                            "pin_code",
+                            "unique_code"
                         ]
                     },
                 });
@@ -582,9 +584,13 @@ export default class MentorController extends BaseController {
             }
             const result = await this.authService.mobileotp(req.body);
             if (result.error) {
-                return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
+                if (result && result.error.output && result.error.output.payload && result.error.output.payload.message == 'Email') {
+                    return res.status(406).send(dispatcher(res, result.data, 'error', speeches.MENTOR_EXISTS, 406));
+                }else{
+                    return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
+                }  
             } else {
-                return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.OTP_SEND, 202));
+                return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.OTP_SEND_EMAIL, 202));
             }
         } catch (error) {
             next(error)
