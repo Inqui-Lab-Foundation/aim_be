@@ -35,6 +35,7 @@ export const speeches = {
     USER_PASSWORD: "User pasword doesn't match",
     USER_PASSWORD_CHANGE: "User password updated",
     USER_MOBILE_CHANGE: "User mobile number updated",
+    USER_PASS_UPDATE:"User password is send to Eamil",
     OTP_SEND:"OTP send to mobile number",
     OTP_SEND_EMAIL:"OTP send to Email",
     USER_RISTRICTED: "Unauthorized Access!",

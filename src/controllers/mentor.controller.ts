@@ -598,11 +598,11 @@ export default class MentorController extends BaseController {
     }
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const { mobile, organization_code, otp } = req.body;
+            const { email, organization_code, otp } = req.body;
             let otpCheck = typeof otp == 'boolean' && otp == false ? otp : true;
             if (otpCheck) {
-                if (!mobile) {
-                    throw badRequest(speeches.MOBILE_NUMBER_REQUIRED);
+                if (!email) {
+                    throw badRequest(speeches.USER_EMAIL_REQUIRED);
                 }
             } else {
                 if (!organization_code) {
@@ -615,7 +615,7 @@ export default class MentorController extends BaseController {
             } else if (result.error) {
                 return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
             } else {
-                return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_MOBILE_CHANGE, 202));
+                return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASS_UPDATE, 202));
             }
         } catch (error) {
             next(error)
