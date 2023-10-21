@@ -27,6 +27,7 @@ export const wildcardRoutes = [
     "/api/v1/organizations/pinCode",
     "/api/v1/organizations/states",
     "/api/v1/organizations/ATLCode",
+    "/api/v1/organizations/checkUniqueCode",
     "/api/v1/organizations/login",
     "/api/v1/mentors/validateOtp",
     "/api/v1/dashboard/refreshMapStatsLive",
