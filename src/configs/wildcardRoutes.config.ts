@@ -44,5 +44,6 @@ export const wildcardRoutes = [
     "/script",
     "/otpScript",
     "/api/v1/auth/roadMap",
-    "/api/v1/district_coordinators/login"
+    "/api/v1/district_coordinators/login",
+    "/api/v1/mentors/triggerWelcomeEmail"
 ];
