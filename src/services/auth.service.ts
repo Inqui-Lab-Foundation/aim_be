@@ -626,10 +626,33 @@ export default class authService {
      * @param responseBody Object
      * @returns Object
      */
-    async triggerEmail(email: any) {
+    async triggerEmail(email: any,id:any, fulldata:any) {
         const result: any = {}
         const otp: any = Math.random().toFixed(6).substr(-6);
-
+        const verifyOtpdata = `<img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mh.jpg" alt="header"/>
+        <h3>Dear Guide Teacher,</h3>
+        
+        <p>Your One-Time Password (OTP) to register yourself as a guide teacher in ATL Marathon 23-24 is <b>${otp}</b></p>
+        
+        <p>We appreciate for your interest in inspiring students to solve problems with simplified design thinking process as a method to innovate through this program.</p>
+        <p>
+        <strong>
+        Regards,<br> ATL Marathon
+        </strong>
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mf.jpg" alt="footer"}/>`
+        const forgotPassData = `
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mh.jpg" alt="header"/>
+        <h3>Dear Guide Teacher,</h3>
+        <p>Your temporary password to login to ATL Marathon platform is <b>${otp}.</b></p>
+        <p>Change your password as per your preference after you login with temporary password.</p>
+        <p><strong>Link: https://atl.unisolve.org</strong></p>
+        <p>
+        <strong>
+        Regards,<br> ATL Marathon
+        </strong>
+        </p>
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mf.jpg" alt="footer"}/>`
+    
         AWS.config.update({
             region: 'ap-south-1',
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -647,7 +670,7 @@ export default class authService {
                 Body: { /* required */
                     Html: {
                         Charset: "UTF-8",
-                        Data: `Your temporary password to log-in is <B>${otp}</B> - UNISOLVE`
+                        Data: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
                     },
                     Text: {
                         Charset: "UTF-8",
@@ -656,23 +679,23 @@ export default class authService {
                 },
                 Subject: {
                     Charset: 'UTF-8',
-                    Data: 'UNISOLVE OTP SERVICES'
+                    Data: 'AIM OTP SERVICES'
                 }
             },
-            Source: "unisolveinfo@inqui-lab.org", /* required */
+            Source: "noresponse@inqui-lab.org", /* required */
             ReplyToAddresses: [],
         };
         try {
-            // // Create the promise and SES service object
-            // let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
-            // // Handle promise's fulfilled/rejected states
-            // await sendPromise.then((data: any) => {
-            //     result['messageId'] = data.MessageId;
-            //     result['otp'] = otp;
-            // }).catch((err: any) => {
-            //     throw err;
-            // });
-            result['otp'] = 112233;
+            // Create the promise and SES service object
+            let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
+            // Handle promise's fulfilled/rejected states
+            await sendPromise.then((data: any) => {
+                result['messageId'] = data.MessageId;
+                result['otp'] = otp;
+            }).catch((err: any) => {
+                throw err;
+            });
+            //result['otp'] = 112233;
             return result;
         } catch (error) {
             return error;
@@ -770,13 +793,52 @@ export default class authService {
                 throw badRequest('Email');
             }
             else{
-                const otp = await this.triggerEmail(requestBody.username);
+                const otp = await this.triggerEmail(requestBody.username,1,'no');
             if (otp instanceof Error) {
                 throw otp;
             }
             result.data = otp.otp
             return result;
             }
+        } catch (error) {
+            result['error'] = error;
+            return result;
+        }
+    }
+     async triggerWelcome(requestBody: any) {
+        let result: any = {};
+        try {
+            const {school_name,udise_code,atl_code,district,state,pin_code,email,mobile} = requestBody;
+            var pass = email.trim();
+            var myArray = pass.split('@');
+            let word = myArray[0];
+            const WelcomeTemp = `
+            <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mh.jpg" alt="header"/>
+            <h3>Dear Guide Teacher,</h3>
+            <h4>Congratulations for successfully registering for ATL Marathon 23-24.</h4>
+            <p>Your schools has been successfully registered with the following details :
+            <br> School name: <strong> ${school_name}</strong> <br> UDISE CODE:<strong> ${udise_code}</strong>
+            <br> ATL CODE:<strong> ${atl_code}</strong>
+            <br> District:<strong> ${district}</strong>
+             <br> State:<strong> ${state}</strong>
+             <br> Pincode:<strong> ${pin_code}</strong>
+            </p>
+            <p> Below are your log-in details: </p>
+            <p> Login User ID: <strong> ${email} </strong>
+            <br>
+            Password: <strong>  ${word}
+            </strong> <br>
+            Mobile no: <strong> ${mobile} </strong>
+            <p>Please use your user id and password to login and proceed further.</p>
+            <p><strong>Link: https://atl.unisolve.org</strong></p>
+            <p><strong>Regards,<br> ATL Marathon</strong></p>
+            <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mf.jpg" alt="footer"}/>`
+            const otp = await this.triggerEmail(email,2,WelcomeTemp);
+            if (otp instanceof Error) {
+                throw otp;
+            }
+            result.data = 'Email sent successfully'
+            return result;
         } catch (error) {
             result['error'] = error;
             return result;
@@ -814,7 +876,7 @@ export default class authService {
                 passwordNeedToBeUpdated['otp'] = requestBody.organization_code;
                 passwordNeedToBeUpdated["messageId"] = speeches.AWSMESSAGEID
             } else {
-                const otpOBJ = await this.triggerEmail(requestBody.email);
+                const otpOBJ = await this.triggerEmail(requestBody.email,3,'no');
                 passwordNeedToBeUpdated['otp'] = otpOBJ.otp;
                 if (passwordNeedToBeUpdated instanceof Error) {
                     throw passwordNeedToBeUpdated;
