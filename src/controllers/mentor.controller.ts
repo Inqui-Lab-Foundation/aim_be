@@ -54,7 +54,7 @@ export default class MentorController extends BaseController {
         this.router.post(`${this.path}/bulkUpload`, this.bulkUpload.bind(this));
         this.router.post(`${this.path}/mobileOtp`,this.mobileOpt.bind(this));
         this.router.get(`${this.path}/mentorpdfdata`,this.mentorpdfdata.bind(this));
-    
+        this.router.post(`${this.path}/triggerWelcomeEmail`,this.triggerWelcomeEmail.bind(this));
         super.initializeRoutes();
     }
     protected async autoFillUserDataForBulkUpload(req: Request, res: Response, modelLoaded: any, reqData: any = null) {
@@ -787,6 +787,14 @@ export default class MentorController extends BaseController {
                 }
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
+        } catch (error) {
+            next(error);
+        }
+    }
+    protected async triggerWelcomeEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const result = await this.authService.triggerWelcome(req.body);
+            return res.status(200).send(dispatcher(res, result, 'success'));
         } catch (error) {
             next(error);
         }
