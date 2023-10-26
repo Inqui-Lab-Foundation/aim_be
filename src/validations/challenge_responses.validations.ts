@@ -24,7 +24,8 @@ export const UpdateAnyFieldSchema = Joi.object().keys({
     state: Joi.string(),
     others: Joi.any(),
     final_result: Joi.any(),
-    initiated_by: Joi.any()
+    initiated_by: Joi.any(),
+    sub_category:Joi.any()
 });
 export const initiateIdeaSchema = Joi.object().keys({
     sdg: Joi.string().required().messages({
@@ -43,4 +44,5 @@ export const challengeResponsesSchema = Joi.object().keys({
     others: Joi.any(),
     state: Joi.string(),
     district: Joi.string(),
+    sub_category:Joi.any()
 });
