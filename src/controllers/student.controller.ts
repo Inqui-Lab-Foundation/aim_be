@@ -131,6 +131,9 @@ export default class StudentController extends BaseController {
                                 model: organization,
                                 attributes: [
                                     "organization_name",
+                                    "unique_code",
+                                    "pin_code",
+                                    "category",
                                     "principal_name",
                                     "principal_mobile",
                                     "category",
@@ -429,6 +432,7 @@ export default class StudentController extends BaseController {
             }
             result.data['organization_name'] = mentorData.dataValues.organization.organization_name;
             result.data['district'] = mentorData.dataValues.organization.district;
+            result.data['state'] = mentorData.dataValues.organization.state;
             return res.status(200).send(dispatcher(res, result.data, 'success', speeches.USER_LOGIN_SUCCESS));
         }
     }
