@@ -753,6 +753,7 @@ export default class ChallengeResponsesController extends BaseController {
                 sdg: req.body.sdg,
                 others: req.body.others,
                 district: req.body.district,
+                state:req.body.state,
                 submitted_at: req.body.status == "SUBMITTED" ? newFormat.trim() : null
             }, {
                 where: {

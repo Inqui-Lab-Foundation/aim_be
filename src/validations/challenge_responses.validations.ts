@@ -21,6 +21,7 @@ export const UpdateAnyFieldSchema = Joi.object().keys({
     evaluated_at: Joi.any(),
     sdg: Joi.any(),
     district: Joi.string(),
+    state: Joi.string(),
     others: Joi.any(),
     final_result: Joi.any(),
     initiated_by: Joi.any()
@@ -40,5 +41,6 @@ export const challengeResponsesSchema = Joi.object().keys({
     }),
     sdg: Joi.any(),
     others: Joi.any(),
-    district: Joi.string()
+    state: Joi.string(),
+    district: Joi.string(),
 });
