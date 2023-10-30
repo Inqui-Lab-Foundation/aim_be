@@ -656,7 +656,9 @@ export default class authService {
         </strong>
         </p>
         </div></body>`
-    
+        const verifyOtpSubject =`OTP to register on AIM Platfrom`
+        const forgotPassSubjec =`Temporary Password to Login into AIM Platfrom`
+        const fullSubjec = `Welcome! Your AIM Registration was successful. Check out your login details`
         AWS.config.update({
             region: 'ap-south-1',
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -683,7 +685,7 @@ export default class authService {
                 },
                 Subject: {
                     Charset: 'UTF-8',
-                    Data: 'AIM OTP SERVICES'
+                    Data: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : fullSubjec
                 }
             },
             Source: "noresponse@inqui-lab.org", /* required */
