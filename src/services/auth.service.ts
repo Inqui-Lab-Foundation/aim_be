@@ -629,7 +629,9 @@ export default class authService {
     async triggerEmail(email: any,id:any, fulldata:any) {
         const result: any = {}
         const otp: any = Math.random().toFixed(6).substr(-6);
-        const verifyOtpdata = `<img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mh.jpg" alt="header"/>
+        const verifyOtpdata = `<body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+        <div style="padding: 1% 5%;">
         <h3>Dear Guide Teacher,</h3>
         
         <p>Your One-Time Password (OTP) to register yourself as a guide teacher in ATL Marathon 23-24 is <b>${otp}</b></p>
@@ -639,9 +641,11 @@ export default class authService {
         <strong>
         Regards,<br> ATL Marathon
         </strong>
-        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mf.jpg" alt="footer"}/>`
+        </div></body>`
         const forgotPassData = `
-        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mh.jpg" alt="header"/>
+        <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+        <div style="padding: 1% 5%;">
         <h3>Dear Guide Teacher,</h3>
         <p>Your temporary password to login to ATL Marathon platform is <b>${otp}.</b></p>
         <p>Change your password as per your preference after you login with temporary password.</p>
@@ -651,7 +655,7 @@ export default class authService {
         Regards,<br> ATL Marathon
         </strong>
         </p>
-        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mf.jpg" alt="footer"}/>`
+        </div></body>`
     
         AWS.config.update({
             region: 'ap-south-1',
@@ -813,7 +817,9 @@ export default class authService {
             var myArray = pass.split('@');
             let word = myArray[0];
             const WelcomeTemp = `
-            <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mh.jpg" alt="header"/>
+            <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+            <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+            <div style="padding: 1% 5%;">
             <h3>Dear Guide Teacher,</h3>
             <h4>Congratulations for successfully registering for ATL Marathon 23-24.</h4>
             <p>Your schools has been successfully registered with the following details :
@@ -832,7 +838,7 @@ export default class authService {
             <p>Please use your user id and password to login and proceed further.</p>
             <p><strong>Link: https://atl.unisolve.org</strong></p>
             <p><strong>Regards,<br> ATL Marathon</strong></p>
-            <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/mf.jpg" alt="footer"}/>`
+            </div></body>`
             const otp = await this.triggerEmail(email,2,WelcomeTemp);
             if (otp instanceof Error) {
                 throw otp;
