@@ -71,6 +71,8 @@ export default class ChallengeResponsesController extends BaseController {
         const paramStatus: any = req.query.status;
         const evaluation_status: any = req.query.evaluation_status;
         const district: any = req.query.district;
+        const state: any = req.query.state;
+        const sub_category: any = req.query.sub_category;
         const sdg: any = req.query.sdg;
         const rejected_reason: any = req.query.rejected_reason;
         const rejected_reasonSecond: any = req.query.rejected_reasonSecond;
@@ -129,6 +131,12 @@ export default class ChallengeResponsesController extends BaseController {
         if (district) {
             additionalFilter["district"] = district && typeof district == 'string' ? district : {}
         }
+        if (state) {
+            additionalFilter["state"] = state && typeof state == 'string' ? state : {}
+        }
+        if (sub_category) {
+            additionalFilter["sub_category"] = sub_category && typeof sub_category == 'string' ? sub_category : {}
+        }
         if (id) {
             where[`${this.model}_id`] = req.params.id;
             try {
@@ -140,6 +148,8 @@ export default class ChallengeResponsesController extends BaseController {
                                     "challenge_response_id",
                                     "challenge_id",
                                     "sdg",
+                                    "state",
+                                    "sub_category",
                                     "team_id",
                                     "response",
                                     "initiated_by",
@@ -175,6 +185,8 @@ export default class ChallengeResponsesController extends BaseController {
                                     "challenge_response_id",
                                     "challenge_id",
                                     "sdg",
+                                    "state",
+                                    "sub_category",
                                     "team_id",
                                     "response",
                                     "initiated_by",
@@ -236,6 +248,8 @@ export default class ChallengeResponsesController extends BaseController {
                         "challenge_response_id",
                         "challenge_id",
                         "sdg",
+                        "state",
+                        "sub_category",
                         "team_id",
                         "response",
                         "initiated_by",
@@ -288,6 +302,8 @@ export default class ChallengeResponsesController extends BaseController {
                                     "challenge_response_id",
                                     "challenge_id",
                                     "sdg",
+                                    "state",
+                                    "sub_category",
                                     "team_id",
                                     "response",
                                     "initiated_by",
@@ -354,6 +370,8 @@ export default class ChallengeResponsesController extends BaseController {
                                     "challenge_response_id",
                                     "challenge_id",
                                     "sdg",
+                                    "state",
+                                    "sub_category",
                                     "team_id",
                                     "response",
                                     "initiated_by",
@@ -451,6 +469,8 @@ export default class ChallengeResponsesController extends BaseController {
                             "challenge_response_id",
                             "challenge_id",
                             "sdg",
+                            "state",
+                            "sub_category",
                             "team_id",
                             "response",
                             "initiated_by",
@@ -753,6 +773,8 @@ export default class ChallengeResponsesController extends BaseController {
                 sdg: req.body.sdg,
                 others: req.body.others,
                 district: req.body.district,
+                state:req.body.state,
+                sub_category:req.body.sub_category,
                 submitted_at: req.body.status == "SUBMITTED" ? newFormat.trim() : null
             }, {
                 where: {
@@ -842,11 +864,12 @@ export default class ChallengeResponsesController extends BaseController {
                 this.model = model;
             };
             const {status} = req.body;
+            const {nameChange} = req.query;
             let newDate = new Date();
             let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + ' ' + newDate.getHours() + ':' + newDate.getMinutes() + ':' + newDate.getSeconds();
             if (status === 'SUBMITTED'){
                 req.body['submitted_at'] = newFormat.trim()
-            }else{
+            }else if(!nameChange){
                 req.body['submitted_at'] = ''
             }
             const user_id = res.locals.user_id
@@ -1037,6 +1060,7 @@ export default class ChallengeResponsesController extends BaseController {
                         "initiated_by",
                         "submitted_at",
                         "sdg",
+                        "sub_category",
                         "responses",
                         "team_id",
                         "challenge_id",
@@ -1095,6 +1119,7 @@ export default class ChallengeResponsesController extends BaseController {
                             "submitted_at",
                             "challenge_response_id",
                             "others",
+                            "sub_category",
                             "team_id",
                             "response",
                             "status",
