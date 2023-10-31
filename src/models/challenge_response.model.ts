@@ -19,10 +19,12 @@ export class challenge_response extends Model<InferAttributes<challenge_response
     declare rejected_reasonSecond: String;
     declare final_result: Enumerator;
     declare district: String;
+    declare state: String
     declare created_by: number;
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
+    declare sub_category: String;
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -50,6 +52,10 @@ challenge_response.init(
             type: DataTypes.STRING,
             allowNull: true,
         },
+        state: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
         challenge_id: {
             type: DataTypes.INTEGER,
             allowNull: false
@@ -59,6 +65,10 @@ challenge_response.init(
             allowNull: true
         },
         sdg: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        sub_category: {
             type: DataTypes.STRING,
             allowNull: true
         },

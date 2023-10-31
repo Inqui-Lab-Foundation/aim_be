@@ -1,0 +1,51 @@
+name: Deployment
+
+on:
+  push:
+    branches: [development, testing]
+
+jobs:
+  #First we will see the application build or not , then we will deploy in EC2
+  Build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install
+        run: npm i -f
+
+      - name: Buid the application
+        run: npm run build
+
+  Deploy:
+    needs: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Development
+        if: github.ref == 'refs/heads/development'
+        env:
+          PRIVATE_KEY: ${{ secrets.AIM_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.AIM_DEV_HOSTNAME }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${HOSTNAME} '
+            cd /home/ubuntu/aim_be &&
+            git checkout development &&
+            git pull origin &&
+            npm i -f && npm run build && npm run start:prod && pm2 save -f'
+
+      - name: Deploy to testing environment
+        if: github.ref == 'refs/heads/testing'
+        env:
+          PRIVATE_KEY: ${{ secrets.AIM_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.AIM_STG_HOSTNAME }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${HOSTNAME} '
+            cd /home/ubuntu/aim_be &&
+            git checkout testing &&
+            git pull origin &&
+            npm i -f && npm run build && npm run start:prod && pm2 save -f'

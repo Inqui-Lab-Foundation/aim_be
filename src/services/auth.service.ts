@@ -107,14 +107,14 @@ export default class authService {
     async mentorRegister(requestBody: any) {
         let response: any;
         try {
-            // const user_data = await this.crudService.findOne(user, { where: { username: requestBody.username } });
-            // if (user_data) {
-            //     throw badRequest('Email');
-            // } else {
-                const mentor_data = await this.crudService.findOne(mentor, { where: { mobile: requestBody.mobile } })
-                if (mentor_data) {
-                    throw badRequest('Mobile')
-                } else {
+            const user_data = await this.crudService.findOne(user, { where: { username: requestBody.username } });
+            if (user_data) {
+                throw badRequest('Email');
+            } else {
+                // const mentor_data = await this.crudService.findOne(mentor, { where: { mobile: requestBody.mobile } })
+                // if (mentor_data) {
+                //     throw badRequest('Mobile')
+                // } else {
                     let createUserAccount = await this.crudService.create(user, requestBody);
                     let conditions = { ...requestBody, user_id: createUserAccount.dataValues.user_id };
                     let createMentorAccount = await this.crudService.create(mentor, conditions);
@@ -206,7 +206,7 @@ export default class authService {
                 result = await this.crudService.create(student, payload);
                 successResponse.push(payload.full_name);
             } else {
-                errorResponse.push(payload.full_name);
+                errorResponse.push(payload.username);
             }
         };
         let successMsg = successResponse.length ? successResponse.join(', ') + " successfully created. " : ''
@@ -600,23 +600,22 @@ export default class authService {
         // return Math.random().toFixed(6).substr(-6);
         return this.otp;
     }
-    /**
+     /**
      * Trigger OTP Message to specific mobile
      * @param mobile Number
      * @returns Number
      */
-    async triggerOtpMsg(mobile: any,template_id:any) {
+     async triggerOtpMsg(mobile: any,template_id:any) {
         try {
             let otp
-            if(process.env.MOBILE_SMS_URl != ""){
-                otp = await axios.get(`${process.env.MOBILE_SMS_URl}${mobile}&template_id=${template_id}`)
-                return otp.data.otp;
-            }
-            else{
+            // if(process.env.MOBILE_SMS_URl != ""){
+            //     otp = await axios.get(`${process.env.MOBILE_SMS_URl}${mobile}&template_id=${template_id}`)
+            //     return otp.data.otp;
+            // }
+            // else{
                 //otp = Math.random().toFixed(6).substr(-6);
                 otp='112233' 
                 return otp;
-            }
         } catch (error: any) {
             return error
         }
@@ -627,10 +626,39 @@ export default class authService {
      * @param responseBody Object
      * @returns Object
      */
-    async triggerEmail(email: any) {
+    async triggerEmail(email: any,id:any, fulldata:any) {
         const result: any = {}
         const otp: any = Math.random().toFixed(6).substr(-6);
-
+        const verifyOtpdata = `<body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+        <div style="padding: 1% 5%;">
+        <h3>Dear Guide Teacher,</h3>
+        
+        <p>Your One-Time Password (OTP) to register yourself as a guide teacher in ATL Marathon 23-24 is <b>${otp}</b></p>
+        
+        <p>We appreciate for your interest in inspiring students to solve problems with simplified design thinking process as a method to innovate through this program.</p>
+        <p>
+        <strong>
+        Regards,<br> ATL Marathon
+        </strong>
+        </div></body>`
+        const forgotPassData = `
+        <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+        <div style="padding: 1% 5%;">
+        <h3>Dear Guide Teacher,</h3>
+        <p>Your temporary password to login to ATL Marathon platform is <b>${otp}.</b></p>
+        <p>Change your password as per your preference after you login with temporary password.</p>
+        <p><strong>Link: https://atl.unisolve.org</strong></p>
+        <p>
+        <strong>
+        Regards,<br> ATL Marathon
+        </strong>
+        </p>
+        </div></body>`
+        const verifyOtpSubject =`OTP to register on AIM Platfrom`
+        const forgotPassSubjec =`Temporary Password to Login into AIM Platfrom`
+        const fullSubjec = `Welcome! Your AIM Registration was successful. Check out your login details`
         AWS.config.update({
             region: 'ap-south-1',
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -648,7 +676,7 @@ export default class authService {
                 Body: { /* required */
                     Html: {
                         Charset: "UTF-8",
-                        Data: `Your temporary password to log-in is <B>${otp}</B> - UNISOLVE`
+                        Data: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
                     },
                     Text: {
                         Charset: "UTF-8",
@@ -657,10 +685,10 @@ export default class authService {
                 },
                 Subject: {
                     Charset: 'UTF-8',
-                    Data: 'UNISOLVE OTP SERVICES'
+                    Data: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : fullSubjec
                 }
             },
-            Source: "unisolveinfo@inqui-lab.org", /* required */
+            Source: "aim-no-reply@inqui-lab.org", /* required */
             ReplyToAddresses: [],
         };
         try {
@@ -673,6 +701,7 @@ export default class authService {
             }).catch((err: any) => {
                 throw err;
             });
+            //result['otp'] = 112233;
             return result;
         } catch (error) {
             return error;
@@ -765,11 +794,58 @@ export default class authService {
     async mobileotp(requestBody: any) {
         let result: any = {};
         try {
-            const otp = await this.triggerOtpMsg(requestBody.mobile,1);
+            const user_data = await this.crudService.findOne(user, { where: { username: requestBody.username } });
+            if (user_data) {
+                throw badRequest('Email');
+            }
+            else{
+                const otp = await this.triggerEmail(requestBody.username,1,'no');
             if (otp instanceof Error) {
                 throw otp;
             }
-            result.data = otp
+            result.data = otp.otp
+            return result;
+            }
+        } catch (error) {
+            result['error'] = error;
+            return result;
+        }
+    }
+     async triggerWelcome(requestBody: any) {
+        let result: any = {};
+        try {
+            const {school_name,udise_code,atl_code,district,state,pin_code,email,mobile} = requestBody;
+            var pass = email.trim();
+            var myArray = pass.split('@');
+            let word = myArray[0];
+            const WelcomeTemp = `
+            <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+            <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+            <div style="padding: 1% 5%;">
+            <h3>Dear Guide Teacher,</h3>
+            <h4>Congratulations for successfully registering for ATL Marathon 23-24.</h4>
+            <p>Your schools has been successfully registered with the following details :
+            <br> School name: <strong> ${school_name}</strong> <br> UDISE CODE:<strong> ${udise_code}</strong>
+            <br> ATL CODE:<strong> ${atl_code}</strong>
+            <br> District:<strong> ${district}</strong>
+             <br> State:<strong> ${state}</strong>
+             <br> Pincode:<strong> ${pin_code}</strong>
+            </p>
+            <p> Below are your log-in details: </p>
+            <p> Login User ID: <strong> ${email} </strong>
+            <br>
+            Password: <strong>  ${word}
+            </strong> <br>
+            Mobile no: <strong> ${mobile} </strong>
+            <p>Please use your user id and password to login and proceed further.</p>
+            <p><strong>Link: https://atl.unisolve.org</strong></p>
+            <p><strong>Regards,<br> ATL Marathon</strong></p>
+            </div></body>`
+            const otp = await this.triggerEmail(email,2,WelcomeTemp);
+            if (otp instanceof Error) {
+                throw otp;
+            }
+            result.data = 'Email sent successfully'
             return result;
         } catch (error) {
             result['error'] = error;
@@ -794,7 +870,7 @@ export default class authService {
                 });
             } else {
                 mentor_res = await this.crudService.findOne(user, {
-                    where: { username: requestBody.mobile }
+                    where: { username: requestBody.email }
                 });
             }
             if (!mentor_res) {
@@ -808,7 +884,8 @@ export default class authService {
                 passwordNeedToBeUpdated['otp'] = requestBody.organization_code;
                 passwordNeedToBeUpdated["messageId"] = speeches.AWSMESSAGEID
             } else {
-                passwordNeedToBeUpdated['otp'] = await this.triggerOtpMsg(requestBody.mobile,2);
+                const otpOBJ = await this.triggerEmail(requestBody.email,3,'no');
+                passwordNeedToBeUpdated['otp'] = otpOBJ.otp;
                 if (passwordNeedToBeUpdated instanceof Error) {
                     throw passwordNeedToBeUpdated;
                 }

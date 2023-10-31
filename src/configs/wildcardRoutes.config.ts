@@ -23,6 +23,11 @@ export const wildcardRoutes = [
     "/api/v1/admins/updatePassword",
     "/api/v1/organizations/checkOrg",
     "/api/v1/organizations/createOrg",
+    "/api/v1/organizations/districts",
+    "/api/v1/organizations/pinCode",
+    "/api/v1/organizations/states",
+    "/api/v1/organizations/ATLCode",
+    "/api/v1/organizations/checkUniqueCode",
     "/api/v1/organizations/login",
     "/api/v1/mentors/validateOtp",
     "/api/v1/dashboard/refreshMapStatsLive",
@@ -39,5 +44,6 @@ export const wildcardRoutes = [
     "/script",
     "/otpScript",
     "/api/v1/auth/roadMap",
-    "/api/v1/district_coordinators/login"
+    "/api/v1/district_coordinators/login",
+    "/api/v1/mentors/triggerWelcomeEmail"
 ];

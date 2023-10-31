@@ -54,7 +54,7 @@ export default class MentorController extends BaseController {
         this.router.post(`${this.path}/bulkUpload`, this.bulkUpload.bind(this));
         this.router.post(`${this.path}/mobileOtp`,this.mobileOpt.bind(this));
         this.router.get(`${this.path}/mentorpdfdata`,this.mentorpdfdata.bind(this));
-    
+        this.router.post(`${this.path}/triggerWelcomeEmail`,this.triggerWelcomeEmail.bind(this));
         super.initializeRoutes();
     }
     protected async autoFillUserDataForBulkUpload(req: Request, res: Response, modelLoaded: any, reqData: any = null) {
@@ -219,7 +219,9 @@ export default class MentorController extends BaseController {
                             "district",
                             "state",
                             "country",
-                            "category"
+                            "category",
+                            "pin_code",
+                            "unique_code"
                         ]
                     },
                 });
@@ -576,15 +578,19 @@ export default class MentorController extends BaseController {
     }
     private async mobileOpt(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const { mobile } = req.body;
-            if (!mobile) {
-                throw badRequest(speeches.MOBILE_NUMBER_REQUIRED);
+            const { username } = req.body;
+            if (!username) {
+                throw badRequest(speeches.USER_EMAIL_REQUIRED);
             }
             const result = await this.authService.mobileotp(req.body);
             if (result.error) {
-                return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
+                if (result && result.error.output && result.error.output.payload && result.error.output.payload.message == 'Email') {
+                    return res.status(406).send(dispatcher(res, result.data, 'error', speeches.MENTOR_EXISTS, 406));
+                }else{
+                    return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
+                }  
             } else {
-                return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.OTP_SEND, 202));
+                return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.OTP_SEND_EMAIL, 202));
             }
         } catch (error) {
             next(error)
@@ -592,11 +598,11 @@ export default class MentorController extends BaseController {
     }
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const { mobile, organization_code, otp } = req.body;
+            const { email, organization_code, otp } = req.body;
             let otpCheck = typeof otp == 'boolean' && otp == false ? otp : true;
             if (otpCheck) {
-                if (!mobile) {
-                    throw badRequest(speeches.MOBILE_NUMBER_REQUIRED);
+                if (!email) {
+                    throw badRequest(speeches.USER_EMAIL_REQUIRED);
                 }
             } else {
                 if (!organization_code) {
@@ -609,7 +615,7 @@ export default class MentorController extends BaseController {
             } else if (result.error) {
                 return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
             } else {
-                return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_MOBILE_CHANGE, 202));
+                return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASS_UPDATE, 202));
             }
         } catch (error) {
             next(error)
@@ -781,6 +787,14 @@ export default class MentorController extends BaseController {
                 }
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
+        } catch (error) {
+            next(error);
+        }
+    }
+    protected async triggerWelcomeEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const result = await this.authService.triggerWelcome(req.body);
+            return res.status(200).send(dispatcher(res, result, 'success'));
         } catch (error) {
             next(error);
         }

@@ -9,14 +9,14 @@ import dispatcher from "../utils/dispatch.util";
 import ValidationsHolder from "../validations/validationHolder";
 import { videoSchema, videoUpdateSchema } from "../validations/video.validations";
 import BaseController from "./base.controller";
-import { organizationCheckSchema, organizationRawSchema, organizationSchema, organizationUpdateSchema } from "../validations/organization.validations";
+import { organizationCheckSchema, organizationRawSchema, organizationSchema, organizationUpdateSchema, uniqueCodeCheckSchema } from "../validations/organization.validations";
 import authService from "../services/auth.service";
 import validationMiddleware from "../middlewares/validation.middleware";
-import { Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 import { constant } from "lodash";
 import { constents } from "../configs/constents.config";
-import bcrypt from 'bcrypt';
-import { baseConfig } from '../configs/base.config';
+import db from "../utils/dbconnection.util";
+import { organization } from "../models/organization.model";
 
 export default class OrganizationController extends BaseController {
 
@@ -32,11 +32,15 @@ export default class OrganizationController extends BaseController {
     protected initializeRoutes(): void {
         this.router.post(`${this.path}/bulkUpload`, this.bulkUpload.bind(this));
         this.router.get(`${this.path}/districts`, this.getGroupByDistrict.bind(this));
+        this.router.get(`${this.path}/states`, this.getGroupByState.bind(this));
+        this.router.get(`${this.path}/pinCode`, this.getGroupBypinCode.bind(this));
+        this.router.get(`${this.path}/ATLCode`, this.getGroupByATLCode.bind(this));
         this.router.post(`${this.path}/checkOrg`, validationMiddleware(organizationCheckSchema), this.checkOrgDetails.bind(this));
         this.router.post(`${this.path}/createOrg`, validationMiddleware(organizationRawSchema), this.createOrg.bind(this));
         this.router.post(`${this.path}/login`,this.login.bind(this));
         this.router.get(`${this.path}/logout`,this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
+        this.router.post(`${this.path}/checkUniqueCode`, validationMiddleware(uniqueCodeCheckSchema), this.checkUniqueDetails.bind(this));
         super.initializeRoutes();
     };
 
@@ -178,6 +182,56 @@ export default class OrganizationController extends BaseController {
     private async getGroupByDistrict(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let response: any = [];
+            const { state } = req.query;
+            const { model } = req.params;
+            if (model) {
+                this.model = model;
+            };
+            const modelClass = await this.loadModel(model).catch(error => {
+                next(error)
+            });
+            let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
+            let result: any =[];
+            if(state){
+                result = await this.crudService.findAll(modelClass, {
+                    attributes: [
+                        'district'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            objWhereClauseStatusPart.whereClauseStatusPart,{'state':state}
+                        ]
+                    },
+                    group: ['district']
+                });
+
+            }else{
+                result = await this.crudService.findAll(modelClass, {
+                    attributes: [
+                        'district'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            objWhereClauseStatusPart.whereClauseStatusPart
+                        ]
+                    },
+                    group: ['district']
+                });
+                response.push('All Districts');
+            }
+            
+            result.forEach((obj: any) => {
+                response.push(obj.dataValues.district)
+            });
+            return res.status(200).send(dispatcher(res, response, 'success'));
+        } catch (error) {
+            console.log(error)
+            next(error);
+        }
+    }
+    private async getGroupByState(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let response: any = [];
             const { model } = req.params;
             if (model) {
                 this.model = model;
@@ -188,18 +242,19 @@ export default class OrganizationController extends BaseController {
             let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
             const result = await this.crudService.findAll(modelClass, {
                 attributes: [
-                    'district'
+                    'state'
                 ],
                 where: {
                     [Op.and]: [
                         objWhereClauseStatusPart.whereClauseStatusPart
                     ]
                 },
-                group: ['district']
+                group: ['state'],
+                order:['state']
             });
-            response.push('All Districts');
+            response.push('All States');
             result.forEach((obj: any) => {
-                response.push(obj.dataValues.district)
+                response.push(obj.dataValues.state)
             });
             return res.status(200).send(dispatcher(res, response, 'success'));
         } catch (error) {
@@ -207,12 +262,102 @@ export default class OrganizationController extends BaseController {
             next(error);
         }
     }
+    private async getGroupBypinCode(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let response: any = [];
+            const { district } = req.query;
+            const { model } = req.params;
+            if (model) {
+                this.model = model;
+            };
+            const modelClass = await this.loadModel(model).catch(error => {
+                next(error)
+            });
+            let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
+                const result = await this.crudService.findAll(modelClass, {
+                    attributes: [
+                        'pin_code'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            objWhereClauseStatusPart.whereClauseStatusPart,{'district': district }
+                        ]
+                    },
+                    group: ['pin_code']
+                });
+                result.forEach((obj: any) => {
+                    response.push(obj.dataValues.pin_code)
+                });
+        
+            return res.status(200).send(dispatcher(res, response, 'success'));
+        } catch (error) {
+            console.log(error)
+            next(error);
+        }
+    }
+    private async getGroupByATLCode(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let response: any = [];
+            const { pin_code } = req.query;
+            const { model } = req.params;
+            if (model) {
+                this.model = model;
+            };
+            const modelClass = await this.loadModel(model).catch(error => {
+                next(error)
+            });
+            let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
+                const result = await this.crudService.findAll(modelClass, {
+                    attributes: [
+                        'organization_code',
+                        'organization_name'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            objWhereClauseStatusPart.whereClauseStatusPart,{'pin_code': pin_code },{'category':'ATL'}
+                        ]
+                    }
+                });
+            return res.status(200).send(dispatcher(res, result, 'success'));
+        } catch (error) {
+            console.log(error)
+            next(error);
+        }
+    }
     private async createOrg(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         // console.log(req.body);
-        const orgCode = req.body.organization_code;
-        const leve1CryptoEncryptedString = await this.authService.generateCryptEncryption(orgCode);
-        const pass = await bcrypt.hashSync(leve1CryptoEncryptedString, process.env.SALT || baseConfig.SALT);
-        req.body['password'] = pass;
-        return this.createData(req, res, next);
+        const {nonatlcode} = req.query;
+        if(nonatlcode){
+            const orgcode = req.body.organization_code;
+            const findOrgCode  = await db.query(`SELECT count(*) as orgCount  FROM organizations where organization_code like '${orgcode}-%';`,{ type: QueryTypes.SELECT });
+            const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(),10)+1;
+            const ATLCode = `${orgcode}-${countINcrement}`
+            req.body.organization_code = ATLCode;
+            return this.createData(req, res, next);
+        }else {
+            return this.createData(req, res, next);
+        }
+        
+    }
+    private async checkUniqueDetails(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+       try{
+        const org = await this.crudService.findOne(organization,{
+            where: {
+                unique_code: req.body.unique_code,
+                status: {
+                    [Op.or]: ['ACTIVE', 'NEW']
+                }
+            },
+        })
+        if (!org) {
+            res.status(400).send(dispatcher(res, null, 'error', speeches.BAD_REQUEST))
+        } else {
+            res.status(200).send(dispatcher(res, org, 'success', speeches.FETCH_FILE));
+        }
+       }catch (error) {
+        console.log(error)
+        next(error);
+    }
+       
     }
 }
