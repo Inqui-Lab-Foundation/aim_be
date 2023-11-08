@@ -803,7 +803,10 @@ export default class authService {
             if (otp instanceof Error) {
                 throw otp;
             }
-            result.data = otp.otp
+            const key = "PMBXDE9N53V89K65"
+            const stringotp = String(otp.otp);
+            const hashedPassword = CryptoJS.AES.encrypt(stringotp, key).toString();
+            result.data = hashedPassword;
             return result;
             }
         } catch (error) {
