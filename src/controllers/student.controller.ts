@@ -93,19 +93,13 @@ export default class StudentController extends BaseController {
             if (id) {
                 where[`${this.model}_id`] = req.params.id;
                 data = await this.crudService.findOne(modelClass, {
-                    attributes: [
-                        "student_id",
-                        "user_id",
-                        "UUID",
-                        "full_name",
-                        "date_of_birth",
-                        "qualification",
-                        "badges",
-                        "status",
-                        "Age",
-                        "Grade",
-                        "Gender"
-                    ],
+                    attributes: {
+                        include: [
+                            [
+                                db.literal(`( SELECT username FROM users AS u WHERE u.user_id = \`student\`.\`user_id\`)`), 'username_email'
+                            ]
+                        ]
+                },
                     where: {
                         [Op.and]: [
                             whereClauseStatusPart,
@@ -117,7 +111,11 @@ export default class StudentController extends BaseController {
                         attributes: [
                             'team_id',
                             'team_name',
-                            'mentor_id'
+                            'mentor_id',
+                            'moc_name',
+                            'moc_gender',
+                            'moc_email',
+                            'moc_phone'
                         ],
                         include: {
                             model: mentor,
@@ -131,37 +129,33 @@ export default class StudentController extends BaseController {
                                 model: organization,
                                 attributes: [
                                     "organization_name",
+                                    'organization_code',
                                     "unique_code",
                                     "pin_code",
                                     "category",
                                     "principal_name",
                                     "principal_mobile",
-                                    "category",
                                     "city",
                                     "district",
                                     "state",
                                     "country",
+                                    'address'
                                 ],
-                            }
-                        }
-                    }
+                            },
+                            
+                        },
+                    },
                 });
             } else {
                 try {
                     const responseOfFindAndCountAll = await this.crudService.findAndCountAll(modelClass, {
-                        attributes: [
-                            "student_id",
-                            "user_id",
-                            "UUID",
-                            "full_name",
-                            "date_of_birth",
-                            "qualification",
-                            "badges",
-                            "status",
-                            "Age",
-                            "Grade",
-                            "Gender"
-                        ],
+                        attributes: {
+                            include: [
+                                [
+                                    db.literal(`( SELECT username FROM users AS u WHERE u.user_id = \`student\`.\`user_id\`)`), 'username_email'
+                                ]
+                            ]
+                    },
                         where: {
                             [Op.and]: [
                                 whereClauseStatusPart,
@@ -174,6 +168,10 @@ export default class StudentController extends BaseController {
                             attributes: [
                                 'team_id',
                                 'team_name',
+                                'moc_name',
+                                'moc_gender',
+                                'moc_email',
+                                'moc_phone'
                             ],
                             include: {
                                 model: mentor,
@@ -186,10 +184,15 @@ export default class StudentController extends BaseController {
                                     required: false,
                                     model: organization,
                                     attributes: [
-                                        'organization_name',
+                                        "organization_name",
                                         'organization_code',
+                                        "unique_code",
+                                        "pin_code",
+                                        "category",
+                                        "city",
                                         "district",
-                                        "category"
+                                        "state",
+                                        'address'
                                     ]
                                 }
                             }
