@@ -56,6 +56,9 @@ export default class SupportTicketController extends BaseController {
                             db.literal(`(SELECT o.district FROM organizations as o join mentors as m on o.organization_code = m.organization_code where user_id = \`support_ticket\`.\`created_by\` )`), 'district'
                         ],
                         [
+                            db.literal(`(SELECT o.state FROM organizations as o join mentors as m on o.organization_code = m.organization_code where user_id = \`support_ticket\`.\`created_by\` )`), 'state'
+                        ],
+                        [
                             db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = \`support_ticket\`.\`created_by\` )`), 'created_by'
                         ],
                         [
@@ -119,6 +122,9 @@ export default class SupportTicketController extends BaseController {
                             ],
                             [
                                 db.literal(`(SELECT o.district FROM organizations as o join mentors as m on o.organization_code = m.organization_code where user_id = \`support_ticket\`.\`created_by\` )`), 'district'
+                            ],
+                            [
+                                db.literal(`(SELECT o.state FROM organizations as o join mentors as m on o.organization_code = m.organization_code where user_id = \`support_ticket\`.\`created_by\` )`), 'state'
                             ],
                             
                         ],
