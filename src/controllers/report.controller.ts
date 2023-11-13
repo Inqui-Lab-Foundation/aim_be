@@ -1120,32 +1120,45 @@ export default class ReportController extends BaseController {
     }
     protected async getstudentDetailsreport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const {category,district} = req.query;
+            const {category,district,state} = req.query;
             let data: any = {}
             let districtFilter: any = ''
             let categoryFilter:any = ''
-            if(district !== 'All Districts' && category !== 'All Categorys'){
+            let stateFilter:any = ''
+            if(district !== 'All Districts' && category !== 'All Categorys' && state!== 'All States'){
                 districtFilter = `'${district}'`
                 categoryFilter = `'${category}'`
+                stateFilter = `'${state}'`
             }else if(district !== 'All Districts'){
                 districtFilter = `'${district}'`
                 categoryFilter = `'%%'`
+                stateFilter = `'%%'`
             }else if(category !== 'All Categorys'){
                 categoryFilter = `'${category}'`
                 districtFilter = `'%%'`
-            }else{
+                stateFilter = `'%%'`
+            }else if(state !== 'All States'){
+                stateFilter = `'${state}'`
                 districtFilter = `'%%'`
                 categoryFilter = `'%%'`
             }
+            else{
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
+            }
             const summary = await db.query(`SELECT 
-                    udise_code AS 'UDISE code',
+                    udise_code AS 'ATL code',
+                    unique_code AS 'UDISE code',
                     school_name AS 'School Name',
+                    state,
                     district,
                     category,
                     city,
                     hm_name AS 'HM Name',
                     hm_contact AS 'HM Contact',
                     teacher_name AS 'Teacher Name',
+                    teacher_email AS 'Teacher Email',
                     teacher_gender AS 'Teacher Gender',
                     teacher_contact AS 'Teacher Contact',
                     teacher_whatsapp_contact AS 'Teacher WhatsApp Contact',
@@ -1155,14 +1168,14 @@ export default class ReportController extends BaseController {
                     Age,
                     gender,
                     Grade,
-                    pre_survey_status AS 'Pre Survey Status',
+                    disability AS 'Disability status',
                     idea_status AS 'Idea Status',
                     course_status,
                     post_survey_status AS 'Post Survey Status'
                 FROM
                     student_report
                 WHERE
-                    status = 'ACTIVE' && district like ${districtFilter} 
+                    status = 'ACTIVE' && state like ${stateFilter} && district like ${districtFilter} 
                     && category like ${categoryFilter} order by district,teacher_name,team_name,student_name;`, { type: QueryTypes.SELECT });
             data=summary;
             if (!data) {
@@ -1178,41 +1191,52 @@ export default class ReportController extends BaseController {
     }
     protected async getmentorDetailsreport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const {category,district} = req.query;
+            const {category,district,state} = req.query;
             let data: any = {}
             let districtFilter: any = ''
             let categoryFilter:any = ''
-            if(district !== 'All Districts' && category !== 'All Categorys'){
+            let stateFilter:any = ''
+            if(district !== 'All Districts' && category !== 'All Categorys' && state!== 'All States'){
                 districtFilter = `'${district}'`
                 categoryFilter = `'${category}'`
+                stateFilter = `'${state}'`
             }else if(district !== 'All Districts'){
                 districtFilter = `'${district}'`
                 categoryFilter = `'%%'`
+                stateFilter = `'%%'`
             }else if(category !== 'All Categorys'){
                 categoryFilter = `'${category}'`
                 districtFilter = `'%%'`
-            }else{
+                stateFilter = `'%%'`
+            }else if(state !== 'All States'){
+                stateFilter = `'${state}'`
                 districtFilter = `'%%'`
                 categoryFilter = `'%%'`
             }
+            else{
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
+            }
             const summary = await db.query(`SELECT 
-                udise_code AS 'UDISE code',
+                udise_code AS 'ATL code',
+                unique_code AS 'UDISE code',
                 school_name AS 'School Name',
+                state,
                 district,
                 category,
                 city,
                 hm_name AS 'HM Name',
                 hm_contact AS 'HM Contact',
                 teacher_name AS 'Teacher Name',
+                teacher_email AS 'Teacher Email',
                 teacher_gender AS 'Teacher Gender',
                 teacher_contact AS 'Teacher Contact',
                 teacher_whatsapp_contact AS 'Teacher WhatsApp Contact',
-                pre_survey_status AS 'Pre Survey Status',
                 course_status AS 'Course Status',
                 post_survey_status AS 'Post Survey Status',
                 team_count,
                 student_count,
-                preSur_cmp,
                 countop,
                 courseinprogess,
                 submittedcout,
@@ -1220,7 +1244,7 @@ export default class ReportController extends BaseController {
             FROM
                 school_report
             WHERE
-                district LIKE ${districtFilter} && category LIKE ${categoryFilter}
+            state LIKE ${stateFilter} && district LIKE ${districtFilter} && category LIKE ${categoryFilter}
             ORDER BY district,teacher_name;`,{ type: QueryTypes.SELECT })
             data=summary;
             if (!data) {
