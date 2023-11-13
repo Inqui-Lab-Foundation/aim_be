@@ -151,8 +151,6 @@ export default class MentorController extends BaseController {
         try {
             let data: any;
             const { model, id } = req.params;
-            const key = "PMBXDE9N53V89K65";
-            const UNhashedPassword = CryptoJS.AES.decrypt(req.params.id, key).toString(CryptoJS.enc.Utf8);
             const paramStatus: any = req.query.status;
             if (model) {
                 this.model = model;
@@ -194,6 +192,8 @@ export default class MentorController extends BaseController {
                 { district: { [Op.like]: req.query.district } } :
                 { district: { [Op.like]: `%%` } }
             if (id) {
+                const key = "PMBXDE9N53V89K65";
+                const UNhashedPassword = CryptoJS.AES.decrypt(req.params.id, key).toString(CryptoJS.enc.Utf8);
                 where[`${this.model}_id`] = UNhashedPassword;
                 data = await this.crudService.findOne(modelClass, {
                     attributes: {
@@ -258,7 +258,8 @@ export default class MentorController extends BaseController {
                                 "organization_name",
                                 "organization_id",
                                 "district",
-                                "category"
+                                "category",
+                                "state"
                             ], where: whereClauseOfDistrict,
                             require: false
                         }, limit, offset
