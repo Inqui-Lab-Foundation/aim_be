@@ -75,6 +75,7 @@ export default class DashboardController extends BaseController {
         this.router.get(`${this.path}/studentCountbygender`,this.getstudentCountbygender.bind(this));
         this.router.get(`${this.path}/schoolCount`,this.getSchoolCount.bind(this));
         this.router.get(`${this.path}/mentorCourseCount`,this.getmentorCourseCount.bind(this));
+        this.router.get(`${this.path}/ATLNonATLRegCount`,this.getATLNonATLRegCount.bind(this));
 
         super.initializeRoutes();
     }
@@ -1001,5 +1002,31 @@ export default class DashboardController extends BaseController {
             next(err)
         }
     }
-    
+    protected async getATLNonATLRegCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try{
+            let result :any = {};
+            const ATLCount = await db.query(`SELECT 
+            COUNT(DISTINCT mn.organization_code) AS RegSchools
+        FROM
+            organizations AS og
+                LEFT JOIN
+            mentors AS mn ON og.organization_code = mn.organization_code
+        WHERE
+            og.status = 'ACTIVE' and og.category = 'ATL';`,{ type: QueryTypes.SELECT });
+            const NONATLCount = await db.query(`SELECT 
+            COUNT(DISTINCT mn.organization_code) AS RegSchools
+        FROM
+            organizations AS og
+                LEFT JOIN
+            mentors AS mn ON og.organization_code = mn.organization_code
+        WHERE
+            og.status = 'ACTIVE' and og.category = 'Non ATL';`,{ type: QueryTypes.SELECT });
+            result['ATLCount']=Object.values(ATLCount[0]).toString();
+            result['NONATLCount']=Object.values(NONATLCount[0]).toString();
+            res.status(200).send(dispatcher(res,result,'done'))
+        }
+        catch(err){
+            next(err)
+        }
+    }
 };
