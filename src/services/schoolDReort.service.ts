@@ -9,42 +9,29 @@ export default class SchoolDReportService extends BaseService {
     executeSchoolDReport = async () => {
         const removeCode =`truncate school_report;`
         const insertOrgMentor =`
-    INSERT INTO school_report (mentor_id,user_id,udise_code,school_name,district,category,city,hm_name,hm_contact,teacher_name,teacher_gender,teacher_contact,teacher_whatsapp_contact)
-    SELECT 
-        mn.mentor_id,
-        mn.user_id,
-        og.organization_code,
-        og.organization_name,
-        og.district,
-        og.category,
-        og.city,
-        og.principal_name,
-        og.principal_mobile,
-        mn.full_name,
-        mn.gender,
-        mn.mobile,
-        mn.whatapp_mobile
-    FROM
-        (mentors AS mn)
-            LEFT JOIN
-        organizations AS og ON mn.organization_code = og.organization_code
-    WHERE
-        og.status = 'ACTIVE';`
-        const updateMentorPreSurvey = `
-        
-    UPDATE school_report AS d
-            JOIN
-        (SELECT 
-            CASE
-                    WHEN status = 'ACTIVE' THEN 'Completed'
-                END AS 'pre_survey_status',
-                user_id
+        INSERT INTO school_report (mentor_id,user_id,udise_code,school_name,district,category,city,hm_name,hm_contact,teacher_name,teacher_gender,teacher_contact,teacher_whatsapp_contact,state,unique_code)
+        SELECT
+            mn.mentor_id,
+            mn.user_id,
+            og.organization_code,
+            og.organization_name,
+            og.district,
+            og.category,
+            og.city,
+            og.principal_name,
+            og.principal_mobile,
+            mn.full_name,
+            mn.gender,
+            mn.mobile,
+            mn.whatapp_mobile,
+            og.state,
+            og.unique_code
         FROM
-            quiz_survey_responses
+            (mentors AS mn)
+                LEFT JOIN
+            organizations AS og ON mn.organization_code = og.organization_code
         WHERE
-            quiz_survey_id = 1) AS s ON d.user_id = s.user_id 
-    SET 
-        d.pre_survey_status = s.pre_survey_status;`
+            og.status = 'ACTIVE';`
         const updateMentorPostSurvey = `
     
     UPDATE school_report AS d
@@ -98,20 +85,6 @@ export default class SchoolDReportService extends BaseService {
         GROUP BY mentor_id) AS s ON d.mentor_id = s.mentor_id 
     SET 
         d.student_count = s.student_count;`
-        const updateStuPreCount = `
-        
-    UPDATE school_report AS d
-            JOIN
-        (SELECT 
-            COUNT(*) AS preSur_cmp, mentor_id
-        FROM
-            teams
-        JOIN students ON teams.team_id = students.team_id
-        JOIN quiz_survey_responses ON students.user_id = quiz_survey_responses.user_id
-            AND quiz_survey_id = 2
-        GROUP BY mentor_id) AS s ON d.mentor_id = s.mentor_id 
-    SET 
-        d.preSur_cmp = s.preSur_cmp;`
         const updateStuCouCmp = `
     
     UPDATE school_report AS d
@@ -176,6 +149,14 @@ export default class SchoolDReportService extends BaseService {
         GROUP BY mentor_id) AS s ON d.mentor_id = s.mentor_id 
     SET 
         d.draftcout = s.draftcout;`
+        const updateUsername = ` UPDATE school_report AS d
+        JOIN
+    (SELECT 
+        user_id, username
+    FROM
+        users) AS s ON d.user_id = s.user_id 
+SET 
+    d.teacher_email = s.username;`
         try {
           await db.query(removeCode,{
             type: QueryTypes.RAW,
@@ -183,7 +164,7 @@ export default class SchoolDReportService extends BaseService {
           await db.query(insertOrgMentor,{
             type: QueryTypes.RAW,
           });
-          await db.query(updateMentorPreSurvey,{
+          await db.query(updateUsername,{
             type: QueryTypes.RAW,
           });
           await db.query(updateMentorPostSurvey,{
@@ -196,9 +177,6 @@ export default class SchoolDReportService extends BaseService {
             type: QueryTypes.RAW,
           });
           await db.query(updateStudentCount,{
-            type: QueryTypes.RAW,
-          });
-          await db.query(updateStuPreCount,{
             type: QueryTypes.RAW,
           });
           await db.query(updateStuCouCmp,{

@@ -9,9 +9,9 @@ export default class StudentDReportService extends BaseService {
     executeStudentDReport = async () => {
        const removeDtat = `truncate student_report;`
        const StuData = `
-       INSERT INTO student_report(student_id,student_name,Age,gender,Grade,team_id,user_id)
+       INSERT INTO student_report(student_id,student_name,Age,gender,Grade,team_id,user_id,disability)
        SELECT 
-           student_id,full_name, Age, gender, Grade,team_id,user_id
+           student_id,full_name, Age, gender, Grade,team_id,user_id,disability
        FROM
            students;`
            const teamData = ` 
@@ -24,46 +24,52 @@ export default class StudentDReportService extends BaseService {
        SET 
            d.team_name = s.team_name,
            d.mentor_id = s.mentor_id;`
-           const mentorData =`
-       UPDATE student_report AS d
-               JOIN
-           (SELECT 
-               mentor_id,
-                   full_name,
-                   gender,
-                   mobile,
-                   whatapp_mobile,
-                   organization_code
-           FROM
-               mentors) AS s ON d.mentor_id = s.mentor_id 
-       SET 
-           d.teacher_name = s.full_name,
-           d.teacher_gender = s.gender,
-           d.teacher_contact = s.mobile,
-           d.teacher_whatsapp_contact = s.whatapp_mobile,
-           d.udise_code = s.organization_code;`
-           const orgData =`
-       UPDATE student_report AS d
-               JOIN
-           (SELECT 
+           const mentorData =`UPDATE student_report AS d
+           JOIN
+       (SELECT 
+           mentor_id,
+               mentors.full_name,
+               gender,
+               mobile,
+               whatapp_mobile,
                organization_code,
-                   organization_name,
-                   district,
-                   category,
-                   city,
-                   status,
-                   principal_name,
-                   principal_mobile
-           FROM
-               organizations) AS s ON d.udise_code = s.organization_code 
-       SET 
-           d.school_name = s.organization_name,
-           d.district = s.district,
-           d.category = s.category,
-           d.city = s.city,
-           d.status = s.status,
-           d.hm_name = s.principal_name,
-           d.hm_contact = s.principal_mobile;`
+               username
+       FROM
+           mentors
+       JOIN users ON mentors.user_id = users.user_id) AS s ON d.mentor_id = s.mentor_id 
+   SET 
+       d.teacher_name = s.full_name,
+       d.teacher_gender = s.gender,
+       d.teacher_contact = s.mobile,
+       d.teacher_whatsapp_contact = s.whatapp_mobile,
+       d.udise_code = s.organization_code,
+       d.teacher_email = s.username;
+       `
+           const orgData =`UPDATE student_report AS d
+           JOIN
+       (SELECT 
+           organization_code,
+               organization_name,
+               district,
+               category,
+               city,
+               status,
+               principal_name,
+               principal_mobile,
+               unique_code,
+               state
+       FROM
+           organizations) AS s ON d.udise_code = s.organization_code 
+   SET 
+       d.school_name = s.organization_name,
+       d.district = s.district,
+       d.category = s.category,
+       d.city = s.city,
+       d.status = s.status,
+       d.hm_name = s.principal_name,
+       d.hm_contact = s.principal_mobile,
+       d.unique_code = s.unique_code,
+       d.state = s.state;`
            const usernameDtat = `   
        UPDATE student_report AS d
                JOIN
@@ -75,20 +81,6 @@ export default class StudentDReportService extends BaseService {
                role = 'STUDENT') AS s ON d.user_id = s.user_id 
        SET 
            d.student_username = s.username;`
-           const updatePreSurvey = `         
-       UPDATE student_report AS d
-               JOIN
-           (SELECT 
-               CASE
-                       WHEN status = 'ACTIVE' THEN 'Completed'
-                   END AS 'pre_survey_status',
-                   user_id
-           FROM
-               quiz_survey_responses
-           WHERE
-               quiz_survey_id = 2) AS s ON d.user_id = s.user_id 
-       SET 
-           d.pre_survey_status = s.pre_survey_status;`
            const updatePostSurvey = `      
        UPDATE student_report AS d
                JOIN
@@ -140,9 +132,6 @@ export default class StudentDReportService extends BaseService {
             type: QueryTypes.RAW,
           });
           await db.query(usernameDtat,{
-            type: QueryTypes.RAW,
-          });
-          await db.query(updatePreSurvey,{
             type: QueryTypes.RAW,
           });
           await db.query(updatePostSurvey,{
