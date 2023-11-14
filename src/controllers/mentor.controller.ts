@@ -193,7 +193,8 @@ export default class MentorController extends BaseController {
                 { district: { [Op.like]: `%%` } }
             if (id) {
                 const key = "PMBXDE9N53V89K65";
-                const UNhashedPassword = CryptoJS.AES.decrypt(req.params.id, key).toString(CryptoJS.enc.Utf8);
+                const decoded = atob(req.params.id);
+                const UNhashedPassword = CryptoJS.AES.decrypt(decoded, key).toString(CryptoJS.enc.Utf8);
                 where[`${this.model}_id`] = UNhashedPassword;
                 data = await this.crudService.findOne(modelClass, {
                     attributes: {
