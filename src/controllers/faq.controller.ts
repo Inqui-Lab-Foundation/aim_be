@@ -63,13 +63,13 @@ export default class FaqController extends BaseController {
                 'coloumn_name':'question',
                 'index_no':data.dataValues.faq_id,
                 'from_locale':'en',
-                'to_locale':'tn',
+                'to_locale':req.body.to_locale,
                 'key':req.body.question},
                 {'table_name':'faq',
                 'coloumn_name':'answer',
                 'index_no':data.dataValues.faq_id,
                 'from_locale':'en',
-                'to_locale':'tn',
+                'to_locale':req.body.to_locale,
                 'key':req.body.answer}
             ]
 

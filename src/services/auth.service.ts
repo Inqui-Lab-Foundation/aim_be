@@ -803,7 +803,10 @@ export default class authService {
             if (otp instanceof Error) {
                 throw otp;
             }
-            result.data = otp.otp
+            const key = "PMBXDE9N53V89K65"
+            const stringotp = String(otp.otp);
+            const hashedPassword = CryptoJS.AES.encrypt(stringotp, key).toString();
+            result.data = hashedPassword;
             return result;
             }
         } catch (error) {
@@ -865,8 +868,8 @@ export default class authService {
         let passwordNeedToBeUpdated: any = {};
         try {
             if (!otp) {
-                mentor_res = await this.crudService.findOne(mentor, {
-                    where: { [Op.and]: [{ organization_code: requestBody.organization_code }, { mentor_id }] }
+                mentor_res = await this.crudService.findOne(user, {
+                    where: { username: requestBody.username }
                 });
             } else {
                 mentor_res = await this.crudService.findOne(user, {
@@ -881,7 +884,10 @@ export default class authService {
                 where: { user_id: mentor_res.dataValues.user_id }
             });
             if (!otp) {
-                passwordNeedToBeUpdated['otp'] = requestBody.organization_code;
+                var pass = requestBody.username.trim();
+                var myArray = pass.split('@');
+                let word = myArray[0];
+                passwordNeedToBeUpdated['otp'] = word;
                 passwordNeedToBeUpdated["messageId"] = speeches.AWSMESSAGEID
             } else {
                 const otpOBJ = await this.triggerEmail(requestBody.email,3,'no');

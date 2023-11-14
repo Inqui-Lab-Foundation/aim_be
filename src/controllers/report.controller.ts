@@ -18,6 +18,8 @@ import { Op, QueryTypes } from 'sequelize';
 import { user } from "../models/user.model";
 import { team } from "../models/team.model";
 import {baseConfig} from "../configs/base.config";
+import SchoolDReportService from "../services/schoolDReort.service";
+import StudentDReportService from "../services/studentDReort.service";
 //import { reflective_quiz_response } from '../models/reflective_quiz_response.model';
 
 export default class ReportController extends BaseController {
@@ -54,6 +56,8 @@ export default class ReportController extends BaseController {
         this.router.get(`${this.path}/mentordetailsreport`, this.getmentorDetailsreport.bind(this));
         this.router.get(`${this.path}/mentordetailstable`, this.getmentorDetailstable.bind(this));
         this.router.get(`${this.path}/studentdetailstable`, this.getstudentDetailstable.bind(this));
+        this.router.get(`${this.path}/refreshSchoolDReport`, this.refreshSchoolDReport.bind(this));
+        this.router.get(`${this.path}/refreshStudentDReport`, this.refreshStudentDReport.bind(this));
         
         // super.initializeRoutes();
     }
@@ -61,7 +65,7 @@ export default class ReportController extends BaseController {
     protected async getMentorRegList(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { quiz_survey_id } = req.params
-            const { page, size, status ,district,category} = req.query;
+            const { page, size, status ,district,category,state} = req.query;
             let condition = {}
             // condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
@@ -85,13 +89,16 @@ export default class ReportController extends BaseController {
                 addWhereClauseStatusPart = true;
             }
             let districtFilter: any = {}
-            if(district !== 'All Districts' && category !== 'All Categorys'){
-                districtFilter = {category,district,status}
+            if(district !== 'All Districts' && category !== 'All Categorys' && state!=='All States'){
+                districtFilter = {category,district,status,state}
             }else if(district !== 'All Districts'){
                 districtFilter = {district,status}
             }else if(category !== 'All Categorys'){
                 districtFilter = {category,status}
-            }else{
+            }else if(state!=='All States'){
+                districtFilter = {status,state}
+            }
+            else{
                 districtFilter={status}
             }
             const mentorsResult = await mentor.findAll({
@@ -114,10 +121,14 @@ export default class ReportController extends BaseController {
                         model: organization,
                         attributes: [
                             "organization_code",
+                            "unique_code",
                             "organization_name",
                             "category",
+                            "state",
                             "district",
                             "city",
+                            "pin_code",
+                            "address",
                             "principal_name",
                             "principal_mobile"
                         ]
@@ -360,7 +371,7 @@ export default class ReportController extends BaseController {
     protected async notRegistered(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { quiz_survey_id } = req.params
-            const { page, size, role,district,category } = req.query;
+            const { page, size, role,district,category,state } = req.query;
             let condition = role ? { role: { [Op.eq]: role } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(this.model).catch(error => {
@@ -377,31 +388,45 @@ export default class ReportController extends BaseController {
             }
             let districtFilter: any = ''
             let categoryFilter:any = ''
-            if(district !== 'All Districts' && category !== 'All Categorys'){
+            let stateFilter:any = ''
+            if(district !== 'All Districts' && category !== 'All Categorys' && state!== 'All States'){
                 districtFilter = `'${district}'`
                 categoryFilter = `'${category}'`
+                stateFilter = `'${state}'`
             }else if(district !== 'All Districts'){
                 districtFilter = `'${district}'`
                 categoryFilter = `'%%'`
+                stateFilter = `'%%'`
             }else if(category !== 'All Categorys'){
                 categoryFilter = `'${category}'`
                 districtFilter = `'%%'`
-            }else{
+                stateFilter = `'%%'`
+            }else if(state !== 'All States'){
+                stateFilter = `'${state}'`
                 districtFilter = `'%%'`
                 categoryFilter = `'%%'`
+            }
+            else{
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
             }
             const mentorsResult = await db.query(`SELECT 
             organization_id,
             organization_code,
+            unique_code,
             organization_name,
             district,
+            state,
             category,
             city,
             state,
             country,
+            pin_code,
+            address,
             principal_name,
             principal_mobile,
-            principal_email FROM organizations WHERE status='ACTIVE' && district LIKE ${districtFilter} && category LIKE ${categoryFilter} && NOT EXISTS(SELECT mentors.organization_code  from mentors WHERE organizations.organization_code = mentors.organization_code) `, { type: QueryTypes.SELECT });
+            principal_email FROM organizations WHERE status='ACTIVE' && district LIKE ${districtFilter} && category LIKE ${categoryFilter} && state LIKE ${stateFilter} && NOT EXISTS(SELECT mentors.organization_code  from mentors WHERE organizations.organization_code = mentors.organization_code) `, { type: QueryTypes.SELECT });
             if (!mentorsResult) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
@@ -880,75 +905,140 @@ export default class ReportController extends BaseController {
     protected async mentorsummary(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let data: any = {}
-            const district = req.query.district;
+            const state = req.query.state;
             let summary 
-            if(district){
+            if(state){
                 summary = await db.query(`SELECT 
-                org.district,
-                org.organization_count,
+                org.state,
+                org.ATL_Count,
+                org.ATL_Reg_Count,
+                (org.ATL_Count - org.ATL_Reg_Count) AS total_not_Reg_ATL,
+                org.NONATL_Reg_Count,
                 org.male_mentor_count,
                 org.female_mentor_count,
-                org.male_mentor_count + org.female_mentor_count AS total_registered_teachers,
-                org.organization_count - (org.male_mentor_count + org.female_mentor_count) AS total_not_registered_teachers
-            FROM (
-                SELECT 
-                    o.district,
-                    COUNT(distinct o.organization_id) AS organization_count,
-                    SUM(CASE WHEN m.gender = 'Male' THEN 1 ELSE 0 END) AS male_mentor_count,
-                    SUM(CASE WHEN m.gender = 'Female' THEN 1 ELSE 0 END) AS female_mentor_count
+                org.male_mentor_count + org.female_mentor_count AS total_registered_teachers
+            FROM
+                (SELECT 
+                    o.state,
+                        COUNT(CASE
+                            WHEN o.category = 'ATL' THEN 1
+                        END) AS ATL_Count,
+                        COUNT(CASE
+                            WHEN
+                                m.mentor_id <> 'null'
+                                    AND o.category = 'ATL'
+                            THEN
+                                1
+                        END) AS ATL_Reg_Count,
+                        COUNT(CASE
+                            WHEN
+                                m.mentor_id <> 'null'
+                                    AND o.category = 'Non ATL'
+                            THEN
+                                1
+                        END) AS NONATL_Reg_Count,
+                        SUM(CASE
+                            WHEN m.gender = 'Male' THEN 1
+                            ELSE 0
+                        END) AS male_mentor_count,
+                        SUM(CASE
+                            WHEN m.gender = 'Female' THEN 1
+                            ELSE 0
+                        END) AS female_mentor_count
                 FROM
                     organizations o
-                LEFT JOIN
-                    mentors m ON o.organization_code = m.organization_code
-                WHERE o.status='ACTIVE' && o.district= '${district}'
-                GROUP BY
-                    o.district
-            ) AS org ;`, { type: QueryTypes.SELECT });
+                LEFT JOIN mentors m ON o.organization_code = m.organization_code
+                WHERE
+                    o.status = 'ACTIVE' && o.state= '${state}'
+                GROUP BY o.state) AS org`, { type: QueryTypes.SELECT });
 
             }else{
             summary = await db.query(`SELECT 
-                org.district,
-                org.organization_count,
-                org.male_mentor_count,
-                org.female_mentor_count,
-                org.male_mentor_count + org.female_mentor_count AS total_registered_teachers,
-                org.organization_count - (org.male_mentor_count + org.female_mentor_count) AS total_not_registered_teachers
-            FROM (
-                SELECT 
-                    o.district,
-                    COUNT(distinct o.organization_id) AS organization_count,
-                    SUM(CASE WHEN m.gender = 'Male' THEN 1 ELSE 0 END) AS male_mentor_count,
-                    SUM(CASE WHEN m.gender = 'Female' THEN 1 ELSE 0 END) AS female_mentor_count
-                FROM
-                    organizations o
-                LEFT JOIN
-                    mentors m ON o.organization_code = m.organization_code
-                WHERE o.status='ACTIVE'
-                GROUP BY
-                    o.district
-            ) AS org
-            UNION ALL
-            SELECT 
-                'Total',
-                SUM(organization_count),
-                SUM(male_mentor_count),
-                SUM(female_mentor_count),
-                SUM(male_mentor_count + female_mentor_count),
-                SUM(organization_count - (male_mentor_count + female_mentor_count))
-            FROM (
-                SELECT 
-                    o.district,
-                    COUNT(distinct o.organization_id) AS organization_count,
-                    SUM(CASE WHEN m.gender = 'Male' THEN 1 ELSE 0 END) AS male_mentor_count,
-                    SUM(CASE WHEN m.gender = 'Female' THEN 1 ELSE 0 END) AS female_mentor_count
-                FROM
-                    organizations o
-                LEFT JOIN
-                    mentors m ON o.organization_code = m.organization_code
-                WHERE o.status='ACTIVE'
-                GROUP BY
-                    o.district
-            ) AS org;`, { type: QueryTypes.SELECT });
+            org.state,
+            org.ATL_Count,
+            org.ATL_Reg_Count,
+            (org.ATL_Count - org.ATL_Reg_Count) AS total_not_Reg_ATL,
+            org.NONATL_Reg_Count,
+            org.male_mentor_count,
+            org.female_mentor_count,
+            org.male_mentor_count + org.female_mentor_count AS total_registered_teachers
+        FROM
+            (SELECT 
+                o.state,
+                    COUNT(CASE
+                        WHEN o.category = 'ATL' THEN 1
+                    END) AS ATL_Count,
+                    COUNT(CASE
+                        WHEN
+                            m.mentor_id <> 'null'
+                                AND o.category = 'ATL'
+                        THEN
+                            1
+                    END) AS ATL_Reg_Count,
+                    COUNT(CASE
+                        WHEN
+                            m.mentor_id <> 'null'
+                                AND o.category = 'Non ATL'
+                        THEN
+                            1
+                    END) AS NONATL_Reg_Count,
+                    SUM(CASE
+                        WHEN m.gender = 'Male' THEN 1
+                        ELSE 0
+                    END) AS male_mentor_count,
+                    SUM(CASE
+                        WHEN m.gender = 'Female' THEN 1
+                        ELSE 0
+                    END) AS female_mentor_count
+            FROM
+                organizations o
+            LEFT JOIN mentors m ON o.organization_code = m.organization_code
+            WHERE
+                o.status = 'ACTIVE'
+            GROUP BY o.state) AS org 
+        UNION ALL SELECT 
+            'Total',
+            SUM(ATL_Count),
+            SUM(ATL_Reg_Count),
+            SUM(ATL_Count - ATL_Reg_Count),
+            SUM(NONATL_Reg_Count),
+            SUM(male_mentor_count),
+            SUM(female_mentor_count),
+            SUM(male_mentor_count + female_mentor_count)
+        FROM
+            (SELECT 
+                o.state,
+                    COUNT(CASE
+                        WHEN o.category = 'ATL' THEN 1
+                    END) AS ATL_Count,
+                    COUNT(CASE
+                        WHEN
+                            m.mentor_id <> 'null'
+                                AND o.category = 'ATL'
+                        THEN
+                            1
+                    END) AS ATL_Reg_Count,
+                    COUNT(CASE
+                        WHEN
+                            m.mentor_id <> 'null'
+                                AND o.category = 'Non ATL'
+                        THEN
+                            1
+                    END) AS NONATL_Reg_Count,
+                    SUM(CASE
+                        WHEN m.gender = 'Male' THEN 1
+                        ELSE 0
+                    END) AS male_mentor_count,
+                    SUM(CASE
+                        WHEN m.gender = 'Female' THEN 1
+                        ELSE 0
+                    END) AS female_mentor_count
+            FROM
+                organizations o
+            LEFT JOIN mentors m ON o.organization_code = m.organization_code
+            WHERE
+                o.status = 'ACTIVE'
+            GROUP BY o.state) AS org;`, { type: QueryTypes.SELECT });
             }
             data=summary;
             if (!data) {
@@ -1030,84 +1120,63 @@ export default class ReportController extends BaseController {
     }
     protected async getstudentDetailsreport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const {category,district} = req.query;
+            const {category,district,state} = req.query;
             let data: any = {}
             let districtFilter: any = ''
             let categoryFilter:any = ''
-            if(district !== 'All Districts' && category !== 'All Categorys'){
+            let stateFilter:any = ''
+            if(district !== 'All Districts' && category !== 'All Categorys' && state!== 'All States'){
                 districtFilter = `'${district}'`
                 categoryFilter = `'${category}'`
+                stateFilter = `'${state}'`
             }else if(district !== 'All Districts'){
                 districtFilter = `'${district}'`
                 categoryFilter = `'%%'`
+                stateFilter = `'%%'`
             }else if(category !== 'All Categorys'){
                 categoryFilter = `'${category}'`
                 districtFilter = `'%%'`
-            }else{
+                stateFilter = `'%%'`
+            }else if(state !== 'All States'){
+                stateFilter = `'${state}'`
                 districtFilter = `'%%'`
                 categoryFilter = `'%%'`
             }
+            else{
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
+            }
             const summary = await db.query(`SELECT 
-            og.organization_code AS 'UDISE code',
-            og.organization_name AS 'School Name',
-            og.district,
-            og.category,
-            og.city,
-            og.principal_name AS 'HM Name',
-            og.principal_mobile AS 'HM Contact',
-            mn.full_name AS 'Teacher Name',
-            mn.gender AS 'Teacher Gender',
-            mn.mobile AS 'Teacher Contact',
-            mn.whatapp_mobile AS 'Teacher WhatsApp Contact',
-            t.team_name AS 'Team Name',
-            st.full_name AS 'Student Name',
-            (SELECT 
-                    username
+                    udise_code AS 'ATL code',
+                    unique_code AS 'UDISE code',
+                    school_name AS 'School Name',
+                    state,
+                    district,
+                    category,
+                    city,
+                    hm_name AS 'HM Name',
+                    hm_contact AS 'HM Contact',
+                    teacher_name AS 'Teacher Name',
+                    teacher_email AS 'Teacher Email',
+                    teacher_gender AS 'Teacher Gender',
+                    teacher_contact AS 'Teacher Contact',
+                    teacher_whatsapp_contact AS 'Teacher WhatsApp Contact',
+                    team_name AS 'Team Name',
+                    student_name AS 'Student Name',
+                    student_username AS 'Student Username',
+                    Age,
+                    gender,
+                    Grade,
+                    disability AS 'Disability status',
+                    idea_status AS 'Idea Status',
+                    course_status,
+                    post_survey_status AS 'Post Survey Status'
                 FROM
-                    users
+                    student_report
                 WHERE
-                    user_id = st.user_id) AS 'Student Username',
-            st.Age,
-            st.gender,
-            st.Grade,
-            IFNULL((SELECT 
-                            status
-                        FROM
-                            quiz_survey_responses
-                        WHERE
-                            quiz_survey_id = 2
-                                && user_id = st.user_id),
-                    'Not Started') AS 'Pre Survey Status',
-            IFNULL((SELECT 
-                            status
-                        FROM
-                            challenge_responses
-                        WHERE
-                            team_id = st.team_id),
-                    'Not Initiated') AS 'Idea Status',
-            (SELECT 
-                    COUNT(course_topic_id)
-                FROM
-                    user_topic_progress
-                WHERE
-                    user_id = st.user_id) AS course_status,
-            IFNULL((SELECT 
-                            status
-                        FROM
-                            quiz_survey_responses
-                        WHERE
-                            quiz_survey_id = 4
-                                && user_id = st.user_id),
-                    'Not Started') AS 'Post Survey Status'
-        FROM
-            ((((unisolve_db.students AS st)
-            INNER JOIN unisolve_db.teams AS t ON st.team_id = t.team_id)
-            INNER JOIN unisolve_db.mentors AS mn ON t.mentor_id = mn.mentor_id)
-            INNER JOIN unisolve_db.organizations AS og ON mn.organization_code = og.organization_code)
-        WHERE
-            og.status = 'ACTIVE'
-                && og.district like ${districtFilter}
-                && og.category like ${categoryFilter} order by district,mn.full_name,t.team_name,st.full_name;`, { type: QueryTypes.SELECT });
+                    status = 'ACTIVE' && state like ${stateFilter} && district like ${districtFilter} 
+                    && category like ${categoryFilter} order by district,teacher_name,team_name,student_name;`, { type: QueryTypes.SELECT });
             data=summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
@@ -1122,141 +1191,61 @@ export default class ReportController extends BaseController {
     }
     protected async getmentorDetailsreport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const {category,district} = req.query;
+            const {category,district,state} = req.query;
             let data: any = {}
             let districtFilter: any = ''
             let categoryFilter:any = ''
-            if(district !== 'All Districts' && category !== 'All Categorys'){
+            let stateFilter:any = ''
+            if(district !== 'All Districts' && category !== 'All Categorys' && state!== 'All States'){
                 districtFilter = `'${district}'`
                 categoryFilter = `'${category}'`
+                stateFilter = `'${state}'`
             }else if(district !== 'All Districts'){
                 districtFilter = `'${district}'`
                 categoryFilter = `'%%'`
+                stateFilter = `'%%'`
             }else if(category !== 'All Categorys'){
                 categoryFilter = `'${category}'`
                 districtFilter = `'%%'`
-            }else{
+                stateFilter = `'%%'`
+            }else if(state !== 'All States'){
+                stateFilter = `'${state}'`
                 districtFilter = `'%%'`
                 categoryFilter = `'%%'`
             }
+            else{
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
+            }
             const summary = await db.query(`SELECT 
-            og.organization_code AS 'UDISE code',
-            og.organization_name AS 'School Name',
-            og.district,
-            og.category,
-            og.city,
-            og.principal_name AS 'HM Name',
-            og.principal_mobile AS 'HM Contact',
-            mn.full_name AS 'Teacher Name',
-            mn.gender AS 'Teacher Gender',
-            mn.mobile AS 'Teacher Contact',
-            mn.whatapp_mobile AS 'Teacher WhatsApp Contact',
-            IFNULL((SELECT 
-                            CASE
-                                    WHEN status = 'ACTIVE' THEN 'Completed'
-                                END
-                        FROM
-                            quiz_survey_responses
-                        WHERE
-                            quiz_survey_id = 1
-                                && user_id = mn.user_id),
-                    'Not Started') AS 'Pre Survey Status',
-            (SELECT 
-                    CASE
-                            WHEN COUNT(mentor_course_topic_id) >= 8 THEN 'Completed'
-                            WHEN COUNT(mentor_course_topic_id) = 0 THEN 'Not Started'
-                            ELSE 'In Progress'
-                        END
-                FROM
-                    mentor_topic_progress
-                WHERE
-                    user_id = mn.user_id) AS 'Course Status',
-            IFNULL((SELECT 
-                            CASE
-                                    WHEN status = 'ACTIVE' THEN 'Completed'
-                                END
-                        FROM
-                            quiz_survey_responses
-                        WHERE
-                            quiz_survey_id = 3
-                                && user_id = mn.user_id),
-                    'Not Started') AS 'Post Survey Status',
-            (SELECT 
-                    COUNT(*)
-                FROM
-                    teams
-                WHERE
-                    mentor_id = mn.mentor_id) AS team_count,
-            (SELECT 
-                    COUNT(*)
-                FROM
-                    teams
-                        JOIN
-                    students ON teams.team_id = students.team_id
-                WHERE
-                    mentor_id = mn.mentor_id) AS student_count,
-            (SELECT 
-                    COUNT(*)
-                FROM
-                    teams
-                        JOIN
-                    students ON teams.team_id = students.team_id
-                        JOIN
-                    quiz_survey_responses ON students.user_id = quiz_survey_responses.user_id and quiz_survey_id = 2
-                WHERE
-                    mentor_id = mn.mentor_id) AS preSur_cmp,
-            (SELECT 
-                    COUNT(*)
-                FROM
-                    (SELECT 
-                        mentor_id, student_id, COUNT(*), students.user_id
-                    FROM
-                        teams
-                    LEFT JOIN students ON teams.team_id = students.team_id
-                    JOIN user_topic_progress ON students.user_id = user_topic_progress.user_id
-                    WHERE
-                        mentor_id = mn.mentor_id
-                    GROUP BY student_id
-                    HAVING COUNT(*) >= 34) AS total) AS countop,
-            (SELECT 
-                    COUNT(*)
-                FROM
-                    (SELECT 
-                        mentor_id, student_id, COUNT(*), students.user_id
-                    FROM
-                        teams
-                    LEFT JOIN students ON teams.team_id = students.team_id
-                    JOIN user_topic_progress ON students.user_id = user_topic_progress.user_id
-                    WHERE
-                        mentor_id = mn.mentor_id
-                    GROUP BY student_id
-                    HAVING COUNT(*) > 0 && COUNT(*) < 34) AS total) AS courseinprogess,
-            (SELECT 
-                    COUNT(*)
-                FROM
-                    teams
-                        JOIN
-                    challenge_responses ON teams.team_id = challenge_responses.team_id
-                WHERE
-                    mentor_id = mn.mentor_id
-                        AND challenge_responses.status = 'SUBMITTED') AS submittedcout,
-            (SELECT 
-                    COUNT(*)
-                FROM
-                    teams
-                        JOIN
-                    challenge_responses ON teams.team_id = challenge_responses.team_id
-                WHERE
-                    mentor_id = mn.mentor_id
-                        AND challenge_responses.status = 'DRAFT') AS draftcout
-        FROM
-            (mentors AS mn)
-                LEFT JOIN
-            organizations AS og ON mn.organization_code = og.organization_code
-        WHERE
-            og.status = 'ACTIVE'
-                && og.district like ${districtFilter}
-                && og.category like ${categoryFilter} order by district;`, { type: QueryTypes.SELECT });
+                udise_code AS 'ATL code',
+                unique_code AS 'UDISE code',
+                school_name AS 'School Name',
+                state,
+                district,
+                category,
+                city,
+                hm_name AS 'HM Name',
+                hm_contact AS 'HM Contact',
+                teacher_name AS 'Teacher Name',
+                teacher_email AS 'Teacher Email',
+                teacher_gender AS 'Teacher Gender',
+                teacher_contact AS 'Teacher Contact',
+                teacher_whatsapp_contact AS 'Teacher WhatsApp Contact',
+                course_status AS 'Course Status',
+                post_survey_status AS 'Post Survey Status',
+                team_count,
+                student_count,
+                countop,
+                courseinprogess,
+                submittedcout,
+                draftcout
+            FROM
+                school_report
+            WHERE
+            state LIKE ${stateFilter} && district LIKE ${districtFilter} && category LIKE ${categoryFilter}
+            ORDER BY district,teacher_name;`,{ type: QueryTypes.SELECT })
             data=summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
@@ -1272,21 +1261,21 @@ export default class ReportController extends BaseController {
     protected async getmentorDetailstable(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let data: any = {}
-            const district = req.query.district;
+            const state = req.query.state;
             let wherefilter = '';
-            if(district){
-                wherefilter = `&& og.district= '${district}'`;
+            if(state){
+                wherefilter = `&& og.state= '${state}'`;
             }
             const summary = await db.query(`SELECT 
-            og.district, COUNT(mn.mentor_id) AS totalReg
+            og.state, COUNT(mn.mentor_id) AS totalReg
         FROM
             organizations AS og
                 LEFT JOIN
             mentors AS mn ON og.organization_code = mn.organization_code
             WHERE og.status='ACTIVE' ${wherefilter}
-        GROUP BY og.district;`, { type: QueryTypes.SELECT });
+        GROUP BY og.state;`, { type: QueryTypes.SELECT });
         const teamCount = await db.query(`SELECT 
-        og.district, COUNT(t.team_id) AS totalTeams
+        og.state, COUNT(t.team_id) AS totalTeams
     FROM
         organizations AS og
             LEFT JOIN
@@ -1294,9 +1283,9 @@ export default class ReportController extends BaseController {
             INNER JOIN
         teams AS t ON mn.mentor_id = t.mentor_id
         WHERE og.status='ACTIVE' ${wherefilter}
-    GROUP BY og.district;`,{ type: QueryTypes.SELECT });
+    GROUP BY og.state;`,{ type: QueryTypes.SELECT });
         const studentCountDetails = await db.query(`SELECT 
-        og.district,
+        og.state,
         COUNT(st.student_id) AS totalstudent,
         SUM(CASE
             WHEN st.gender = 'MALE' THEN 1
@@ -1315,9 +1304,9 @@ export default class ReportController extends BaseController {
             INNER JOIN
         students AS st ON st.team_id = t.team_id
         WHERE og.status='ACTIVE' ${wherefilter}
-    GROUP BY og.district;`,{ type: QueryTypes.SELECT });
-        const courseINcompleted = await db.query(`select district,count(*) as courseIN from (SELECT 
-            district,cou
+    GROUP BY og.state;`,{ type: QueryTypes.SELECT });
+        const courseINcompleted = await db.query(`select state,count(*) as courseIN from (SELECT 
+            state,cou
         FROM
             unisolve_db.organizations AS og
                 LEFT JOIN
@@ -1330,9 +1319,9 @@ export default class ReportController extends BaseController {
             FROM
                 unisolve_db.mentor_topic_progress
             GROUP BY user_id having count(*)<8) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
-        group by organization_id having cou<8) as final group by district;`, { type: QueryTypes.SELECT });
-        const courseCompleted= await db.query(`select district,count(*) as courseCMP from (SELECT 
-            district,cou
+        group by organization_id having cou<8) as final group by state;`, { type: QueryTypes.SELECT });
+        const courseCompleted= await db.query(`select state,count(*) as courseCMP from (SELECT 
+            state,cou
         FROM
             unisolve_db.organizations AS og
                 LEFT JOIN
@@ -1345,7 +1334,7 @@ export default class ReportController extends BaseController {
             FROM
                 unisolve_db.mentor_topic_progress
             GROUP BY user_id having count(*)>=8) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
-        group by organization_id having cou>=8) as final group by district`, { type: QueryTypes.SELECT });
+        group by organization_id having cou>=8) as final group by state`, { type: QueryTypes.SELECT });
             data['summary'] = summary;
             data['teamCount'] = teamCount;
             data['studentCountDetails'] = studentCountDetails;
@@ -1365,13 +1354,13 @@ export default class ReportController extends BaseController {
     protected async getstudentDetailstable(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let data: any = {}
-            const district = req.query.district;
+            const state = req.query.state;
             let wherefilter = '';
-            if(district){
-                wherefilter = `&& og.district= '${district}'`;
+            if(state){
+                wherefilter = `&& og.state= '${state}'`;
             }
             const summary = await db.query(`SELECT 
-            og.district, COUNT(t.team_id) AS totalTeams
+            og.state, COUNT(t.team_id) AS totalTeams
         FROM
             organizations AS og
                 LEFT JOIN
@@ -1379,9 +1368,9 @@ export default class ReportController extends BaseController {
                 LEFT JOIN
             teams AS t ON mn.mentor_id = t.mentor_id
             WHERE og.status='ACTIVE' ${wherefilter}
-        GROUP BY og.district;`, { type: QueryTypes.SELECT });
+        GROUP BY og.state;`, { type: QueryTypes.SELECT });
             const studentCountDetails = await db.query(`SELECT 
-            og.district,
+            og.state,
             COUNT(st.student_id) AS totalstudent
         FROM
             organizations AS og
@@ -1391,9 +1380,9 @@ export default class ReportController extends BaseController {
             teams AS t ON mn.mentor_id = t.mentor_id
                 INNER JOIN
             students AS st ON st.team_id = t.team_id where og.status = 'ACTIVE' ${wherefilter}
-        GROUP BY og.district;`,{ type: QueryTypes.SELECT });
+        GROUP BY og.state;`,{ type: QueryTypes.SELECT });
             const courseCompleted = await db.query(`SELECT 
-            og.district,count(st.student_id) as studentCourseCMP
+            og.state,count(st.student_id) as studentCourseCMP
         FROM
             students AS st
                 JOIN
@@ -1408,9 +1397,9 @@ export default class ReportController extends BaseController {
             FROM
                 user_topic_progress
             GROUP BY user_id
-            HAVING COUNT(*) >= 34) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.district`, { type: QueryTypes.SELECT });
+            HAVING COUNT(*) >= 34) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
             const courseINprogesss = await db.query(`SELECT 
-            og.district,count(st.student_id) as studentCourseIN
+            og.state,count(st.student_id) as studentCourseIN
         FROM
             students AS st
                 JOIN
@@ -1425,9 +1414,9 @@ export default class ReportController extends BaseController {
             FROM
                 user_topic_progress
             GROUP BY user_id
-            HAVING COUNT(*) < 34) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.district`, { type: QueryTypes.SELECT });
+            HAVING COUNT(*) < 34) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
             const submittedCount = await db.query(`SELECT 
-            og.district,count(te.team_id) as submittedCount
+            og.state,count(te.team_id) as submittedCount
         FROM
             teams AS te
                 JOIN
@@ -1440,9 +1429,9 @@ export default class ReportController extends BaseController {
             FROM
                 challenge_responses
             WHERE
-                status = 'SUBMITTED') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' ${wherefilter} group by og.district`, { type: QueryTypes.SELECT });
+                status = 'SUBMITTED') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
             const draftCount = await db.query(`SELECT 
-            og.district,count(te.team_id) as draftCount
+            og.state,count(te.team_id) as draftCount
         FROM
             teams AS te
                 JOIN
@@ -1455,7 +1444,7 @@ export default class ReportController extends BaseController {
             FROM
                 challenge_responses
             WHERE
-                status = 'DRAFT') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' ${wherefilter} group by og.district`, { type: QueryTypes.SELECT });
+                status = 'DRAFT') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
             data['summary'] = summary;
             data['studentCountDetails'] = studentCountDetails;
             data['courseCompleted'] = courseCompleted;
@@ -1471,6 +1460,26 @@ export default class ReportController extends BaseController {
             res.status(200).send(dispatcher(res, data, "success"))
         } catch (err) {
             next(err)
+        }
+    }
+    private async refreshSchoolDReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const service = new SchoolDReportService()
+            await service.executeSchoolDReport()
+            const result = 'School Report SQL queries executed successfully.'
+            res.status(200).json(dispatcher(res, result, "success"))
+        } catch (err) {
+            next(err);
+        }
+    }
+    private async refreshStudentDReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const service = new StudentDReportService()
+            await service.executeStudentDReport()
+            const result = 'Student Report SQL queries executed successfully.'
+            res.status(200).json(dispatcher(res, result, "success"))
+        } catch (err) {
+            next(err);
         }
     }
 }
