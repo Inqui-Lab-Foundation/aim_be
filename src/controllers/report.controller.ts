@@ -1397,7 +1397,7 @@ export default class ReportController extends BaseController {
             FROM
                 user_topic_progress
             GROUP BY user_id
-            HAVING COUNT(*) >= 34) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
+            HAVING COUNT(*) >= 31) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
             const courseINprogesss = await db.query(`SELECT 
             og.state,count(st.student_id) as studentCourseIN
         FROM
@@ -1414,7 +1414,7 @@ export default class ReportController extends BaseController {
             FROM
                 user_topic_progress
             GROUP BY user_id
-            HAVING COUNT(*) < 34) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
+            HAVING COUNT(*) < 31) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
             const submittedCount = await db.query(`SELECT 
             og.state,count(te.team_id) as submittedCount
         FROM

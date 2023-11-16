@@ -84,11 +84,11 @@ export default class StudentController extends BaseController {
                 whereClauseStatusPart = { "status": "ACTIVE" };
                 boolStatusWhereClauseRequired = true;
             };
-            let district: any = req.query.district;
-            let districtFilter: any = {}
-            if (district) {
-                districtFilter['whereClause'] = district && typeof district == 'string' && district !== 'All Districts' ? { district } : {}
-                districtFilter["liter"] = district && typeof district == 'string' && district !== 'All Districts' ? db.literal('`team->mentor->organization`.`district` = ' + JSON.stringify(district)) : {}
+            let state: any = req.query.state;
+            let stateFilter: any = {}
+            if (state) {
+                stateFilter['whereClause'] = state && typeof state == 'string' && state !== 'All States' ? { state } : {}
+                stateFilter["liter"] = state && typeof state == 'string' && state !== 'All States' ? db.literal('`team->mentor->organization`.`state` = ' + JSON.stringify(state)) : {}
             }
             if (id) {
                 where[`${this.model}_id`] = req.params.id;
@@ -160,7 +160,7 @@ export default class StudentController extends BaseController {
                             [Op.and]: [
                                 whereClauseStatusPart,
                                 condition,
-                                districtFilter.liter
+                                stateFilter.liter
                             ]
                         },
                         include: {
@@ -180,7 +180,7 @@ export default class StudentController extends BaseController {
                                     'full_name'
                                 ],
                                 include: {
-                                    where: districtFilter.whereClause,
+                                    where: stateFilter.whereClause,
                                     required: false,
                                     model: organization,
                                     attributes: [
