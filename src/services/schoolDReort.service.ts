@@ -99,7 +99,7 @@ export default class SchoolDReportService extends BaseService {
         LEFT JOIN students ON teams.team_id = students.team_id
         JOIN user_topic_progress ON students.user_id = user_topic_progress.user_id
         GROUP BY student_id
-        HAVING COUNT(*) >= 34) AS total
+        HAVING COUNT(*) >= 31) AS total
         GROUP BY mentor_id) AS s ON d.mentor_id = s.mentor_id 
     SET 
         d.countop = s.countop;`
@@ -117,7 +117,7 @@ export default class SchoolDReportService extends BaseService {
         LEFT JOIN students ON teams.team_id = students.team_id
         JOIN user_topic_progress ON students.user_id = user_topic_progress.user_id
         GROUP BY student_id
-        HAVING COUNT(*) < 34) AS total
+        HAVING COUNT(*) < 31) AS total
         GROUP BY mentor_id) AS s ON d.mentor_id = s.mentor_id 
     SET 
         d.courseinprogess = s.courseinprogess;`
