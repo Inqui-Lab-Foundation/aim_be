@@ -187,10 +187,10 @@ export default class MentorController extends BaseController {
             // if (current_user !== getUserIdFromMentorId.getDataValue("user_id")) {
             //     throw forbidden();
             // };
-            let district: any = req.query.district;
-            let whereClauseOfDistrict: any = district && district !== 'All Districts' ?
-                { district: { [Op.like]: req.query.district } } :
-                { district: { [Op.like]: `%%` } }
+            let state: any = req.query.state;
+            let whereClauseOfState: any = state && state !== 'All States' ?
+                { state: { [Op.like]: req.query.state } } :
+                { state: { [Op.like]: `%%` } }
             if (id) {
                 const key = "PMBXDE9N53V89K65";
                 const decoded = atob(req.params.id);
@@ -261,7 +261,7 @@ export default class MentorController extends BaseController {
                                 "district",
                                 "category",
                                 "state"
-                            ], where: whereClauseOfDistrict,
+                            ], where: whereClauseOfState,
                             require: false
                         }, limit, offset
                     })
