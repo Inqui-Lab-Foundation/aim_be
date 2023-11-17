@@ -101,21 +101,58 @@ export default class FaqController extends BaseController {
             const updateQuestion = {'key':req.body.question};
             const updateAnswer = {'key':req.body.answer};
 
-            const QuestionWhere = {where:{table_name:'faq',coloumn_name:'question',index_no:faqId}};
-            const AnswerWhere = {where:{table_name:'faq',coloumn_name:'answer',index_no:faqId}};
+            const QuestionWhereTN = {where:{table_name:'faq',coloumn_name:'question',index_no:faqId,to_locale:'tn'}};
+            const AnswerWhereTN = {where:{table_name:'faq',coloumn_name:'answer',index_no:faqId,to_locale:'tn'}};
+            const QuestionWhereKA = {where:{table_name:'faq',coloumn_name:'question',index_no:faqId,to_locale:'ka'}};
+            const AnswerWhereKA = {where:{table_name:'faq',coloumn_name:'answer',index_no:faqId,to_locale:'ka'}};
+            const QuestionWhereTE = {where:{table_name:'faq',coloumn_name:'question',index_no:faqId,to_locale:'te'}};
+            const AnswerWhereTE = {where:{table_name:'faq',coloumn_name:'answer',index_no:faqId,to_locale:'te'}};
+            const QuestionWhereHI = {where:{table_name:'faq',coloumn_name:'question',index_no:faqId,to_locale:'hi'}};
+            const AnswerWhereHI = {where:{table_name:'faq',coloumn_name:'answer',index_no:faqId,to_locale:'hi'}};
 
-            const updatetranQst = await this.crudService.update(translation,updateQuestion,QuestionWhere);
-            if (updatetranQst instanceof Error) {
-                throw updatetranQst;
+            const updatetranQstTN = await this.crudService.update(translation,updateQuestion,QuestionWhereTN);
+            if (updatetranQstTN instanceof Error) {
+                throw updatetranQstTN;
             }
-            const updatetranANS = await this.crudService.update(translation,updateAnswer,AnswerWhere);
-            if (updatetranQst instanceof Error) {
-                throw updatetranQst;
+            const updatetranANSTN = await this.crudService.update(translation,updateAnswer,AnswerWhereTN);
+            if (updatetranANSTN instanceof Error) {
+                throw updatetranANSTN;
             }
+            const updatetranQstKA = await this.crudService.update(translation,updateQuestion,QuestionWhereKA);
+            if (updatetranQstKA instanceof Error) {
+                throw updatetranQstKA;
+            }
+            const updatetranANSKA = await this.crudService.update(translation,updateAnswer,AnswerWhereKA);
+            if (updatetranANSKA instanceof Error) {
+                throw updatetranANSKA;
+            }
+            const updatetranQstTE = await this.crudService.update(translation,updateQuestion,QuestionWhereTE);
+            if (updatetranQstTE instanceof Error) {
+                throw updatetranQstTE;
+            }
+            const updatetranANSTE = await this.crudService.update(translation,updateAnswer,AnswerWhereTE);
+            if (updatetranANSTE instanceof Error) {
+                throw updatetranANSTE;
+            }
+            const updatetranQstHI = await this.crudService.update(translation,updateQuestion,QuestionWhereHI);
+            if (updatetranQstHI instanceof Error) {
+                throw updatetranQstHI;
+            }
+            const updatetranANSHI = await this.crudService.update(translation,updateAnswer,AnswerWhereHI);
+            if (updatetranANSHI instanceof Error) {
+                throw updatetranANSHI;
+            }
+            
 
             result['faqdata']=data;
-            result['updatetranQst']=updatetranQst;
-            result['updatetranANS']=updatetranANS;
+            result['updatetranQstTN']=updatetranQstTN;
+            result['updatetranANSTN']=updatetranANSTN;
+            result['updatetranQstKA']=updatetranQstKA;
+            result['updatetranANSKA']=updatetranANSKA;
+            result['updatetranQstTE']=updatetranQstTE;
+            result['updatetranANSTE']=updatetranANSTE;
+            result['updatetranQstHI']=updatetranQstHI;
+            result['updatetranANSHI']=updatetranANSHI;
             return res.status(200).send(dispatcher(res, result, 'success'));
         }catch (err) {
             next(err)
@@ -131,21 +168,57 @@ export default class FaqController extends BaseController {
             if (data instanceof Error) {
                 throw data;
             }
-            const QuestionWhere = {where:{table_name:'faq',coloumn_name:'question',index_no:faqId}};
-            const AnswerWhere = {where:{table_name:'faq',coloumn_name:'answer',index_no:faqId}};
+            const QuestionWhereTN = {where:{table_name:'faq',coloumn_name:'question',index_no:faqId,to_locale:'tn'}};
+            const AnswerWhereTN = {where:{table_name:'faq',coloumn_name:'answer',index_no:faqId,to_locale:'tn'}};
+            const QuestionWhereKA = {where:{table_name:'faq',coloumn_name:'question',index_no:faqId,to_locale:'ka'}};
+            const AnswerWhereKA = {where:{table_name:'faq',coloumn_name:'answer',index_no:faqId,to_locale:'ka'}};
+            const QuestionWhereTE = {where:{table_name:'faq',coloumn_name:'question',index_no:faqId,to_locale:'te'}};
+            const AnswerWhereTE = {where:{table_name:'faq',coloumn_name:'answer',index_no:faqId,to_locale:'te'}};
+            const QuestionWhereHI = {where:{table_name:'faq',coloumn_name:'question',index_no:faqId,to_locale:'hi'}};
+            const AnswerWhereHI = {where:{table_name:'faq',coloumn_name:'answer',index_no:faqId,to_locale:'hi'}};
 
-            const updatetranQst = await this.crudService.delete(translation,QuestionWhere);
-            if (updatetranQst instanceof Error) {
-                throw updatetranQst;
+            const updatetranQstTN = await this.crudService.delete(translation,QuestionWhereTN);
+            if (updatetranQstTN instanceof Error) {
+                throw updatetranQstTN;
             }
-            const updatetranANS = await this.crudService.delete(translation,AnswerWhere);
-            if (updatetranQst instanceof Error) {
-                throw updatetranQst;
+            const updatetranANSTN = await this.crudService.delete(translation,AnswerWhereTN);
+            if (updatetranANSTN instanceof Error) {
+                throw updatetranANSTN;
+            }
+            const updatetranQstKA = await this.crudService.delete(translation,QuestionWhereKA);
+            if (updatetranQstKA instanceof Error) {
+                throw updatetranQstKA;
+            }
+            const updatetranANSKA = await this.crudService.delete(translation,AnswerWhereKA);
+            if (updatetranANSKA instanceof Error) {
+                throw updatetranANSKA;
+            }
+            const updatetranQstTE = await this.crudService.delete(translation,QuestionWhereTE);
+            if (updatetranQstTE instanceof Error) {
+                throw updatetranQstTE;
+            }
+            const updatetranANSTE = await this.crudService.delete(translation,AnswerWhereTE);
+            if (updatetranANSTE instanceof Error) {
+                throw updatetranANSTE;
+            }
+            const updatetranQstHI = await this.crudService.delete(translation,QuestionWhereHI);
+            if (updatetranQstHI instanceof Error) {
+                throw updatetranQstHI;
+            }
+            const updatetranANSHI = await this.crudService.delete(translation,AnswerWhereHI);
+            if (updatetranANSHI instanceof Error) {
+                throw updatetranANSHI;
             }
 
             result['faqdata']=data;
-            result['updatetranQst']=updatetranQst;
-            result['updatetranANS']=updatetranANS;
+            result['updatetranQstTN']=updatetranQstTN;
+            result['updatetranANSTN']=updatetranANSTN;
+            result['updatetranQstKA']=updatetranQstKA;
+            result['updatetranANSKA']=updatetranANSKA;
+            result['updatetranQstTE']=updatetranQstTE;
+            result['updatetranANSTE']=updatetranANSTE;
+            result['updatetranQstHI']=updatetranQstHI;
+            result['updatetranANSHI']=updatetranANSHI;
             return res.status(200).send(dispatcher(res, result, 'success'));
         }catch (err) {
             next(err)
