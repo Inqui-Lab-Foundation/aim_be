@@ -556,7 +556,7 @@ export default class ChallengeResponsesController extends BaseController {
             if (!evaluator_user_id) throw unauthorized(speeches.ID_REQUIRED);
 
             let activeDistrict = await this.crudService.findOne(evaluation_process, {
-                attributes: ['district'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L1' }] }
+                attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L1' }] }
             });
             let districts = activeDistrict.dataValues.district;
             const convertToDistrictArray = districts.split(",");
@@ -622,7 +622,7 @@ export default class ChallengeResponsesController extends BaseController {
                         break;
                     case 'L2':
                         let activeDistrict = await this.crudService.findOne(evaluation_process, {
-                            attributes: ['district'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L2' }] }
+                            attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L2' }] }
                         });
                         let districts = activeDistrict.dataValues.district
                         if (districts !== null) {
