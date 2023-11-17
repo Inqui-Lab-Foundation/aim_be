@@ -386,7 +386,7 @@ export default class DashboardService extends BaseService {
      */
     getDbLieralForCourseCompletedCreatedAt(addWhereClauseStatusPart: any, whereClauseStatusPartLiteral: any) {
         return `
-            select created_at from user_topic_progress as utp where 1=1 and  utp.status = "COMPLETED" and course_topic_id = 34 and utp.user_id = \`student\`.\`user_id\` 
+            select created_at from user_topic_progress as utp where 1=1 and  utp.status = "COMPLETED" and course_topic_id = 31 and utp.user_id = \`student\`.\`user_id\` 
         `
     }
 }
