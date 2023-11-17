@@ -1487,6 +1487,7 @@ export default class ReportController extends BaseController {
         try {
             let data: any = {}
             const summary = await db.query(`SELECT 
+            o.state,
             COUNT(CASE
                 WHEN o.category = 'ATL' THEN 1
             END) AS ATL_Student_Count,
@@ -1502,7 +1503,8 @@ export default class ReportController extends BaseController {
                 JOIN
             organizations AS o ON m.organization_code = o.organization_code
         WHERE
-            o.status = 'ACTIVE';`, { type: QueryTypes.SELECT });
+            o.status = 'ACTIVE'
+        GROUP BY o.state;`, { type: QueryTypes.SELECT });
             data=summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
