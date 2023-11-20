@@ -589,6 +589,8 @@ export default class ChallengeResponsesController extends BaseController {
                             "created_at",
                             "submitted_at",
                             `status`,
+                            `state`,
+                            `sub_category`,
                             [
                                 db.literal(`( SELECT count(*) FROM challenge_responses as idea where idea.status = 'SUBMITTED')`),
                                 'overAllIdeas'
@@ -627,9 +629,9 @@ export default class ChallengeResponsesController extends BaseController {
                         let states = activeState.dataValues.state
                         if (states !== null) {
                             let statesArray = states.replace(/,/g, "','")
-                            challengeResponse = await db.query("SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.sdg, challenge_responses.team_id, challenge_responses.response, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, (SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) FROM l1_accepted WHERE l1_accepted.state IN ('" + statesArray + "')) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = " + evaluator_user_id.toString() + ") AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE l1_accepted.state IN ('" + statesArray + "') AND NOT FIND_IN_SET(" + evaluator_user_id.toString() + ", l1_accepted.evals) ORDER BY RAND() LIMIT 1", { type: QueryTypes.SELECT });
+                            challengeResponse = await db.query("SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.sdg, challenge_responses.team_id, challenge_responses.response, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.sub_category,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) FROM l1_accepted WHERE l1_accepted.state IN ('" + statesArray + "')) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = " + evaluator_user_id.toString() + ") AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE l1_accepted.state IN ('" + statesArray + "') AND NOT FIND_IN_SET(" + evaluator_user_id.toString() + ", l1_accepted.evals) ORDER BY RAND() LIMIT 1", { type: QueryTypes.SELECT });
                         } else {
-                            challengeResponse = await db.query(`SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.sdg, challenge_responses.team_id, challenge_responses.response, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status,    (SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) FROM l1_accepted) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}) AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE NOT FIND_IN_SET(${evaluator_user_id.toString()}, l1_accepted.evals) ORDER BY RAND() LIMIT 1`, { type: QueryTypes.SELECT });
+                            challengeResponse = await db.query(`SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.sdg, challenge_responses.team_id, challenge_responses.response, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.sub_category,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) FROM l1_accepted) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}) AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE NOT FIND_IN_SET(${evaluator_user_id.toString()}, l1_accepted.evals) ORDER BY RAND() LIMIT 1`, { type: QueryTypes.SELECT });
                         }
                         const evaluatedIdeas = await db.query(`SELECT COUNT(*) as evaluatedIdeas FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}`, { type: QueryTypes.SELECT })
                         let throwMessage = {
@@ -1227,6 +1229,8 @@ export default class ChallengeResponsesController extends BaseController {
                                 "rejected_reason",
                                 "rejected_reasonSecond",
                                 "final_result", "district",
+                                "state",
+                                "sub_category",
                                 [
                                     db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                                 ],
@@ -1276,6 +1280,8 @@ export default class ChallengeResponsesController extends BaseController {
                                 "rejected_reason",
                                 "rejected_reasonSecond",
                                 "final_result", "district",
+                                "state",
+                                "sub_category",
                                 [
                                     db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                                 ],
