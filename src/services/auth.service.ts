@@ -13,7 +13,7 @@ import { admin } from "../models/admin.model";
 import { evaluator } from "../models/evaluator.model";
 import { mentor } from "../models/mentor.model";
 import { organization } from '../models/organization.model';
-import {district_coordinators} from '../models/district_coordinators.model';
+import {state_coordinators} from '../models/state_coordinators.model';
 import { student } from "../models/student.model";
 import { user } from "../models/user.model";
 import { team } from '../models/team.model';
@@ -474,7 +474,7 @@ export default class authService {
      * @param requestBody object 
      * @returns object
      */
-    async districtlogin(requestBody: any) {
+    async statelogin(requestBody: any) {
         const GLOBAL_PASSWORD = 'uniSolve'
         const GlobalCryptoEncryptedString = await this.generateCryptEncryption(GLOBAL_PASSWORD);
         const result: any = {};
@@ -488,7 +488,7 @@ export default class authService {
                     "password": await bcrypt.hashSync(requestBody.password, process.env.SALT || baseConfig.SALT)
                 }
             }
-            const user_res: any = await this.crudService.findOne(district_coordinators, {
+            const user_res: any = await this.crudService.findOne(state_coordinators, {
                 where: whereClause
             })
             if (!user_res) {
@@ -512,19 +512,19 @@ export default class authService {
                     result['error'] = error_message;
                     return result;
                 }
-                await this.crudService.update(district_coordinators, {
+                await this.crudService.update(state_coordinators, {
                     is_loggedin: "YES",
                     last_login: new Date().toLocaleString()
-                }, { where: { id: user_res.id } });
+                }, { where: { state_coordinators_id: user_res.state_coordinators_id } });
 
                 user_res.is_loggedin = "YES";
                 const token = await jwtUtil.createToken(user_res.dataValues, `${process.env.PRIVATE_KEY}`);
 
                 result['data'] = {
-                    id: user_res.dataValues.id,
-                    role:'DISTRICT',
+                    id: user_res.dataValues.state_coordinators_id,
+                    role:'STATE',
                     username: user_res.dataValues.username,
-                    district_name: user_res.dataValues.district_name,
+                    state_name: user_res.dataValues.state_name,
                     status: user_res.dataValues.status,
                     token,
                     type: 'Bearer',
@@ -542,12 +542,12 @@ export default class authService {
      * @param requestBody object 
      * @returns object
      */
-    async districtlogout(requestBody: any, responseBody: any) {
+    async statelogout(requestBody: any, responseBody: any) {
         let result: any = {};
         try {
-            const update_res = await this.crudService.update(district_coordinators,
+            const update_res = await this.crudService.update(state_coordinators,
                 { is_loggedin: "NO" },
-                { where: { id: requestBody.id } }
+                { where: { state_coordinators_id: requestBody.id } }
             );
             result['data'] = update_res;
             return result;
@@ -562,12 +562,12 @@ export default class authService {
      * @param responseBody Objects
      * @returns Objects
      */
-     async districtchangePassword(requestBody: any, responseBody: any) {
+     async statechangePassword(requestBody: any, responseBody: any) {
         let result: any = {};
         try {
-            const user_res: any = await this.crudService.findOnePassword(district_coordinators, {
+            const user_res: any = await this.crudService.findOnePassword(state_coordinators, {
                 where: {
-                    id : requestBody.id
+                    state_coordinators_id : requestBody.id
                 }
             });
             if (!user_res) {
@@ -581,9 +581,9 @@ export default class authService {
                 result['match'] = user_res;
                 return result;
             } else {
-                const response = await this.crudService.update(district_coordinators, {
+                const response = await this.crudService.update(state_coordinators, {
                     password: await bcrypt.hashSync(requestBody.new_password, process.env.SALT || baseConfig.SALT)
-                }, { where: { id: user_res.dataValues.id } });
+                }, { where: { state_coordinators_id: user_res.dataValues.state_coordinators_id } });
                 result['data'] = response;
                 return result;
             }
