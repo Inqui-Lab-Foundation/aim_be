@@ -4,13 +4,13 @@ import dispatcher from "../utils/dispatch.util";
 import BaseController from "./base.controller";
 import authService from "../services/auth.service";
 
-export default class DistrictController extends BaseController {
+export default class StateController extends BaseController {
 
-    model = "district_coordinators";
+    model = "state_coordinators";
     authService: authService = new authService;
 
     protected initializePath(): void {
-        this.path = '/district_coordinators';
+        this.path = '/state_coordinators';
     }
     protected initializeValidations(): void {
     }
@@ -23,7 +23,7 @@ export default class DistrictController extends BaseController {
 
     private async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const result = await this.authService.districtlogin(req.body);
+            const result = await this.authService.statelogin(req.body);
             if (!result) {
                 return res.status(404).send(dispatcher(res, result, 'error', speeches.USER_NOT_FOUND));
             }
@@ -39,7 +39,7 @@ export default class DistrictController extends BaseController {
     }
 
     private async logout(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        const result = await this.authService.districtlogout(req.body, res);
+        const result = await this.authService.statelogout(req.body, res);
         if (result.error) {
             next(result.error);
         } else {
@@ -48,7 +48,7 @@ export default class DistrictController extends BaseController {
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        const result = await this.authService.districtchangePassword(req.body, res);
+        const result = await this.authService.statechangePassword(req.body, res);
         if (!result) {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
         } else if (result.error) {

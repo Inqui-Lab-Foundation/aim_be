@@ -3,11 +3,11 @@ import db from '../utils/dbconnection.util';
 import { constents } from '../configs/constents.config';
 
 
-export class district_coordinators extends Model<InferAttributes<district_coordinators>, InferCreationAttributes<district_coordinators>> {
-    declare id: CreationOptional<number>;
+export class state_coordinators extends Model<InferAttributes<state_coordinators>, InferCreationAttributes<state_coordinators>> {
+    declare state_coordinators_id: CreationOptional<number>;
     declare username: string;
     declare password: string;
-    declare district_name: string;
+    declare state_name: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -17,8 +17,8 @@ export class district_coordinators extends Model<InferAttributes<district_coordi
     declare last_login : Date;
 }
 
-district_coordinators.init({
-    id: {
+state_coordinators.init({
+    state_coordinators_id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true
@@ -31,7 +31,7 @@ district_coordinators.init({
         type: DataTypes.STRING,
         allowNull: false
     },
-    district_name: {
+    state_name: {
         type: DataTypes.STRING,
         allowNull: false
     },
@@ -70,7 +70,7 @@ district_coordinators.init({
 },
     {
         sequelize: db,
-        tableName: 'district_coordinators',
+        tableName: 'state_coordinators',
         timestamps: true,
         updatedAt: 'updated_at',
         createdAt: 'created_at',

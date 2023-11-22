@@ -58,6 +58,7 @@ export default class ReportController extends BaseController {
         this.router.get(`${this.path}/studentdetailstable`, this.getstudentDetailstable.bind(this));
         this.router.get(`${this.path}/refreshSchoolDReport`, this.refreshSchoolDReport.bind(this));
         this.router.get(`${this.path}/refreshStudentDReport`, this.refreshStudentDReport.bind(this));
+        this.router.get(`${this.path}/studentATLnonATLcount`, this.getstudentATLnonATLcount.bind(this));
         
         // super.initializeRoutes();
     }
@@ -1482,5 +1483,38 @@ export default class ReportController extends BaseController {
             next(err);
         }
     }
+    protected async getstudentATLnonATLcount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let data: any = {}
+            const summary = await db.query(`SELECT 
+            o.state,
+            COUNT(CASE
+                WHEN o.category = 'ATL' THEN 1
+            END) AS ATL_Student_Count,
+            COUNT(CASE
+                WHEN o.category = 'Non ATL' THEN 1
+            END) AS NONATL_Student_Count
+        FROM
+            students AS s
+                JOIN
+            teams AS t ON s.team_id = t.team_id
+                JOIN
+            mentors AS m ON t.mentor_id = m.mentor_id
+                JOIN
+            organizations AS o ON m.organization_code = o.organization_code
+        WHERE
+            o.status = 'ACTIVE'
+        GROUP BY o.state;`, { type: QueryTypes.SELECT });
+            data=summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
 }
-

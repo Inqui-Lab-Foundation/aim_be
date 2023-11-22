@@ -555,19 +555,19 @@ export default class ChallengeResponsesController extends BaseController {
             let evaluator_user_id = req.query.evaluator_user_id;
             if (!evaluator_user_id) throw unauthorized(speeches.ID_REQUIRED);
 
-            let activeDistrict = await this.crudService.findOne(evaluation_process, {
-                attributes: ['district'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L1' }] }
+            let activeState = await this.crudService.findOne(evaluation_process, {
+                attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L1' }] }
             });
-            let districts = activeDistrict.dataValues.district;
-            const convertToDistrictArray = districts.split(",");
+            let states = activeState.dataValues.state;
+            const convertToStateArray = states.split(",");
             const paramStatus: any = req.query.status;
             let boolStatusWhereClauseRequired = false;
 
             if (paramStatus && (paramStatus in constents.challenges_flags.list)) {
-                whereClauseStatusPart = { "status": paramStatus ,district : {[Op.in]: convertToDistrictArray} };
+                whereClauseStatusPart = { "status": paramStatus ,state : {[Op.in]: convertToStateArray} };
                 boolStatusWhereClauseRequired = true;
             } else {
-                whereClauseStatusPart = { "status": "SUBMITTED",district : {[Op.in]: convertToDistrictArray} };
+                whereClauseStatusPart = { "status": "SUBMITTED",state : {[Op.in]: convertToStateArray} };
                 boolStatusWhereClauseRequired = true;
             };
 
@@ -575,7 +575,7 @@ export default class ChallengeResponsesController extends BaseController {
 
             let level = req.query.level;
             if (level && typeof level == 'string') {
-                let districtsArray = districts.replace(/,/g, "','")
+                let statesArray = states.replace(/,/g, "','")
                 switch (level) {
                     case 'L1':
                         attributesNeedFetch = [
@@ -589,12 +589,14 @@ export default class ChallengeResponsesController extends BaseController {
                             "created_at",
                             "submitted_at",
                             `status`,
+                            `state`,
+                            `sub_category`,
                             [
                                 db.literal(`( SELECT count(*) FROM challenge_responses as idea where idea.status = 'SUBMITTED')`),
                                 'overAllIdeas'
                             ],
                             [
-                                db.literal(`( SELECT count(*) FROM challenge_responses as idea where idea.evaluation_status is null AND idea.status = 'SUBMITTED' AND idea.district IN ('${districtsArray}'))`),
+                                db.literal(`( SELECT count(*) FROM challenge_responses as idea where idea.evaluation_status is null AND idea.status = 'SUBMITTED' AND idea.state IN ('${statesArray}'))`),
                                 'openIdeas'
                             ],
                             [
@@ -621,15 +623,15 @@ export default class ChallengeResponsesController extends BaseController {
                         challengeResponse.dataValues.response = JSON.parse(challengeResponse.dataValues.response)
                         break;
                     case 'L2':
-                        let activeDistrict = await this.crudService.findOne(evaluation_process, {
-                            attributes: ['district'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L2' }] }
+                        let activeState = await this.crudService.findOne(evaluation_process, {
+                            attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L2' }] }
                         });
-                        let districts = activeDistrict.dataValues.district
-                        if (districts !== null) {
-                            let districtsArray = districts.replace(/,/g, "','")
-                            challengeResponse = await db.query("SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.sdg, challenge_responses.team_id, challenge_responses.response, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, (SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) FROM l1_accepted WHERE l1_accepted.district IN ('" + districtsArray + "')) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = " + evaluator_user_id.toString() + ") AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE l1_accepted.district IN ('" + districtsArray + "') AND NOT FIND_IN_SET(" + evaluator_user_id.toString() + ", l1_accepted.evals) ORDER BY RAND() LIMIT 1", { type: QueryTypes.SELECT });
+                        let states = activeState.dataValues.state
+                        if (states !== null) {
+                            let statesArray = states.replace(/,/g, "','")
+                            challengeResponse = await db.query("SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.sdg, challenge_responses.team_id, challenge_responses.response, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.sub_category,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) FROM l1_accepted WHERE l1_accepted.state IN ('" + statesArray + "')) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = " + evaluator_user_id.toString() + ") AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE l1_accepted.state IN ('" + statesArray + "') AND NOT FIND_IN_SET(" + evaluator_user_id.toString() + ", l1_accepted.evals) ORDER BY RAND() LIMIT 1", { type: QueryTypes.SELECT });
                         } else {
-                            challengeResponse = await db.query(`SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.sdg, challenge_responses.team_id, challenge_responses.response, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status,    (SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) FROM l1_accepted) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}) AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE NOT FIND_IN_SET(${evaluator_user_id.toString()}, l1_accepted.evals) ORDER BY RAND() LIMIT 1`, { type: QueryTypes.SELECT });
+                            challengeResponse = await db.query(`SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.sdg, challenge_responses.team_id, challenge_responses.response, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.sub_category,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) FROM l1_accepted) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}) AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE NOT FIND_IN_SET(${evaluator_user_id.toString()}, l1_accepted.evals) ORDER BY RAND() LIMIT 1`, { type: QueryTypes.SELECT });
                         }
                         const evaluatedIdeas = await db.query(`SELECT COUNT(*) as evaluatedIdeas FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}`, { type: QueryTypes.SELECT })
                         let throwMessage = {
@@ -1227,6 +1229,8 @@ export default class ChallengeResponsesController extends BaseController {
                                 "rejected_reason",
                                 "rejected_reasonSecond",
                                 "final_result", "district",
+                                "state",
+                                "sub_category",
                                 [
                                     db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                                 ],
@@ -1276,6 +1280,8 @@ export default class ChallengeResponsesController extends BaseController {
                                 "rejected_reason",
                                 "rejected_reasonSecond",
                                 "final_result", "district",
+                                "state",
+                                "sub_category",
                                 [
                                     db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                                 ],
