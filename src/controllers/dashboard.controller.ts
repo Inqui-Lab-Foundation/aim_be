@@ -76,6 +76,9 @@ export default class DashboardController extends BaseController {
         this.router.get(`${this.path}/schoolCount`,this.getSchoolCount.bind(this));
         this.router.get(`${this.path}/mentorCourseCount`,this.getmentorCourseCount.bind(this));
         this.router.get(`${this.path}/ATLNonATLRegCount`,this.getATLNonATLRegCount.bind(this));
+        //State DashBoard stats
+        this.router.get(`${this.path}/StateDashboard`,this.getStateDashboard.bind(this));
+        
 
         super.initializeRoutes();
     }
@@ -1026,6 +1029,140 @@ export default class DashboardController extends BaseController {
             res.status(200).send(dispatcher(res,result,'done'))
         }
         catch(err){
+            next(err)
+        }
+    }
+    protected async getStateDashboard(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let data: any = {}
+            const state = req.query.state;
+            let wherefilter = `&& og.state= '${state}'`;
+            const summary = await db.query(`SELECT 
+                org.state,
+                org.ATL_Count,
+                org.ATL_Reg_Count,
+                org.NONATL_Reg_Count,
+                org.male_mentor_count + org.female_mentor_count AS total_registered_teachers
+            FROM
+                (SELECT 
+                    o.state,
+                        COUNT(CASE
+                            WHEN o.category = 'ATL' THEN 1
+                        END) AS ATL_Count,
+                        COUNT(CASE
+                            WHEN
+                                m.mentor_id <> 'null'
+                                    AND o.category = 'ATL'
+                            THEN
+                                1
+                        END) AS ATL_Reg_Count,
+                        COUNT(CASE
+                            WHEN
+                                m.mentor_id <> 'null'
+                                    AND o.category = 'Non ATL'
+                            THEN
+                                1
+                        END) AS NONATL_Reg_Count,
+                        SUM(CASE
+                            WHEN m.gender = 'Male' THEN 1
+                            ELSE 0
+                        END) AS male_mentor_count,
+                        SUM(CASE
+                            WHEN m.gender = 'Female' THEN 1
+                            ELSE 0
+                        END) AS female_mentor_count
+                FROM
+                    organizations o
+                LEFT JOIN mentors m ON o.organization_code = m.organization_code
+                WHERE
+                    o.status = 'ACTIVE' && o.state= '${state}'
+                GROUP BY o.state) AS org`, { type: QueryTypes.SELECT });
+
+                const teamCount = await db.query(`SELECT 
+                og.state, COUNT(t.team_id) AS totalTeams
+            FROM
+                organizations AS og
+                    LEFT JOIN
+                mentors AS mn ON og.organization_code = mn.organization_code
+                    INNER JOIN
+                teams AS t ON mn.mentor_id = t.mentor_id
+                WHERE og.status='ACTIVE' ${wherefilter}
+            GROUP BY og.state;`,{ type: QueryTypes.SELECT });
+                const studentCountDetails = await db.query(`SELECT 
+                og.state,
+                COUNT(st.student_id) AS totalstudent
+            FROM
+                organizations AS og
+                    LEFT JOIN
+                mentors AS mn ON og.organization_code = mn.organization_code
+                    INNER JOIN
+                teams AS t ON mn.mentor_id = t.mentor_id
+                    INNER JOIN
+                students AS st ON st.team_id = t.team_id
+                WHERE og.status='ACTIVE' ${wherefilter}
+            GROUP BY og.state;`,{ type: QueryTypes.SELECT });
+            const courseCompleted= await db.query(`select state,count(*) as courseCMP from (SELECT 
+                state,cou
+            FROM
+                unisolve_db.organizations AS og
+                    LEFT JOIN
+                (SELECT 
+                    organization_code, cou
+                FROM
+                    unisolve_db.mentors AS mn
+                LEFT JOIN (SELECT 
+                    user_id, COUNT(*) AS cou
+                FROM
+                    unisolve_db.mentor_topic_progress
+                GROUP BY user_id having count(*)>=8) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
+            group by organization_id having cou>=8) as final group by state`, { type: QueryTypes.SELECT });
+            const StudentCourseCompleted = await db.query(`SELECT 
+            og.state,count(st.student_id) as studentCourseCMP
+        FROM
+            students AS st
+                JOIN
+            teams AS te ON st.team_id = te.team_id
+                JOIN
+            mentors AS mn ON te.mentor_id = mn.mentor_id
+                JOIN
+            organizations AS og ON mn.organization_code = og.organization_code
+                JOIN
+            (SELECT 
+                user_id, COUNT(*)
+            FROM
+                user_topic_progress
+            GROUP BY user_id
+            HAVING COUNT(*) >= 31) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
+            const submittedCount = await db.query(`SELECT 
+            og.state,count(te.team_id) as submittedCount
+        FROM
+            teams AS te
+                JOIN
+            mentors AS mn ON te.mentor_id = mn.mentor_id
+                JOIN
+            organizations AS og ON mn.organization_code = og.organization_code
+                JOIN
+            (SELECT 
+                team_id, status
+            FROM
+                challenge_responses
+            WHERE
+                status = 'SUBMITTED') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
+            
+            data['orgdata']=summary;
+            data['teamCount'] = teamCount;
+            data['studentCountDetails'] = studentCountDetails;
+            data['courseCompleted'] = courseCompleted;
+            data['StudentCourseCompleted'] = StudentCourseCompleted;
+            data['submittedCount'] = submittedCount;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
             next(err)
         }
     }
