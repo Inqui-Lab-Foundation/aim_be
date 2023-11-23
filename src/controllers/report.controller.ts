@@ -1486,25 +1486,34 @@ export default class ReportController extends BaseController {
     protected async getstudentATLnonATLcount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let data: any = {}
+            const state = req.query.state;
+            let wherefilter = '';
+            if(state){
+                wherefilter = `WHERE org.state= '${state}'`;
+            }
             const summary = await db.query(`SELECT 
-            o.state,
-            COUNT(CASE
-                WHEN o.category = 'ATL' THEN 1
-            END) AS ATL_Student_Count,
-            COUNT(CASE
-                WHEN o.category = 'Non ATL' THEN 1
-            END) AS NONATL_Student_Count
+            org.state, COALESCE(ATL_Student_Count, 0) as ATL_Student_Count, COALESCE(NONATL_Student_Count, 0) as NONATL_Student_Count
         FROM
-            students AS s
-                JOIN
-            teams AS t ON s.team_id = t.team_id
-                JOIN
-            mentors AS m ON t.mentor_id = m.mentor_id
-                JOIN
-            organizations AS o ON m.organization_code = o.organization_code
-        WHERE
-            o.status = 'ACTIVE'
-        GROUP BY o.state;`, { type: QueryTypes.SELECT });
+            organizations AS org
+               left JOIN
+            (SELECT 
+                o.state,
+                    COUNT(CASE
+                        WHEN o.category = 'ATL' THEN 1
+                    END) AS ATL_Student_Count,
+                    COUNT(CASE
+                        WHEN o.category = 'Non ATL' THEN 1
+                    END) AS NONATL_Student_Count
+            FROM
+                students AS s
+            JOIN teams AS t ON s.team_id = t.team_id
+            JOIN mentors AS m ON t.mentor_id = m.mentor_id
+            JOIN organizations AS o ON m.organization_code = o.organization_code
+            WHERE
+                o.status = 'ACTIVE'
+            GROUP BY o.state) AS t2 ON org.state = t2.state
+            ${wherefilter}
+        GROUP BY org.state;`, { type: QueryTypes.SELECT });
             data=summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
