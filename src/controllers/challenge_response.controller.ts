@@ -60,7 +60,7 @@ export default class ChallengeResponsesController extends BaseController {
     }
 
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        let user_id = res.locals.user_id;
+        let user_id = res.locals.user_id || res.locals.state_coordinators_id;
         let { team_id } = req.query;
         if (!user_id) {
             throw unauthorized(speeches.UNAUTHORIZED_ACCESS)
