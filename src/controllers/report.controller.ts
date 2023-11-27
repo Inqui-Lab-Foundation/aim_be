@@ -64,6 +64,12 @@ export default class ReportController extends BaseController {
         this.router.get(`${this.path}/L2deatilreport`, this.getL2Report.bind(this));
         this.router.get(`${this.path}/L3deatilreport`, this.getL3Report.bind(this));
         this.router.get(`${this.path}/ideaReportTable`, this.getideaReportTable.bind(this));
+        this.router.get(`${this.path}/L1ReportTable1`, this.getL1ReportTable1.bind(this));
+        this.router.get(`${this.path}/L1ReportTable2`, this.getL1ReportTable2.bind(this));
+        this.router.get(`${this.path}/L2ReportTable1`, this.getL2ReportTable1.bind(this));
+        this.router.get(`${this.path}/L2ReportTable2`, this.getL2ReportTable2.bind(this));
+        this.router.get(`${this.path}/L3ReportTable1`, this.getL3ReportTable1.bind(this));
+        this.router.get(`${this.path}/L3ReportTable2`, this.getL3ReportTable2.bind(this));
         
         // super.initializeRoutes();
     }
@@ -1934,5 +1940,197 @@ export default class ReportController extends BaseController {
             next(err)
         }
     }
-
+    protected async getL1ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let data: any = {}
+            const state = req.query.state;
+            let wherefilter = '';
+            if(state){
+                wherefilter = `WHERE org.state= '${state}'`;
+            }
+            const summary = await db.query(`SELECT 
+            org.state,
+            COALESCE(totalSubmited, 0) AS totalSubmited,
+            COALESCE(accepted, 0) AS accepted,
+            COALESCE(rejected, 0) AS rejected
+        FROM
+            organizations AS org
+                LEFT JOIN
+            (SELECT 
+                COUNT(*) AS totalSubmited,
+                    state,
+                    COUNT(CASE
+                        WHEN evaluation_status = 'SELECTEDROUND1' THEN 1
+                    END) AS accepted,
+                    COUNT(CASE
+                        WHEN evaluation_status = 'REJECTEDROUND1' THEN 1
+                    END) AS rejected
+            FROM
+                challenge_responses AS cal
+            WHERE
+                cal.status = 'SUBMITTED'
+            GROUP BY state) AS t2 ON org.state = t2.state
+            ${wherefilter}
+        GROUP BY org.state`, { type: QueryTypes.SELECT });
+            data=summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
+    protected async getL1ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let data: any = {}
+            const summary = await db.query(`SELECT 
+            user_id,
+            full_name,
+            COUNT(evaluated_by) AS totalEvaluated,
+            COUNT(CASE
+                WHEN evaluation_status = 'SELECTEDROUND1' THEN 1
+            END) AS accepted,
+            COUNT(CASE
+                WHEN evaluation_status = 'REJECTEDROUND1' THEN 1
+            END) AS rejected
+        FROM
+            challenge_responses AS cal
+                JOIN
+            evaluators AS evl ON cal.evaluated_by = evl.user_id
+        WHERE
+            cal.status = 'SUBMITTED'
+        GROUP BY evaluated_by`, { type: QueryTypes.SELECT });
+            data=summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
+    protected async getL2ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let data: any = {}
+            const summary = await db.query(`SELECT 
+            challenge_response_id,
+            AVG(overall) AS overall,
+            (AVG(param_1) + AVG(param_2)) / 3 AS Quality,
+            (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS Feasibility
+        FROM
+            evaluator_ratings
+        GROUP BY challenge_response_id;
+        `, { type: QueryTypes.SELECT });
+            data=summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
+    protected async getL2ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let data: any = {}
+            const summary = await db.query(`SELECT 
+            user_id, full_name, COUNT(*) as totalEvaluated
+        FROM
+            evaluator_ratings
+                JOIN
+            evaluators ON evaluator_ratings.evaluator_id = evaluators.user_id
+        GROUP BY user_id;`, { type: QueryTypes.SELECT });
+            data=summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
+    protected async getL3ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let data: any = {}
+            const summary = await db.query(`
+            SELECT 
+    cal.challenge_response_id,
+    AVG(overall) AS overall,
+    (AVG(param_1) + AVG(param_2)) / 3 AS Quality,
+    (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS Feasibility
+FROM
+    evaluator_ratings AS evl_r
+        JOIN
+    challenge_responses AS cal ON evl_r.challenge_response_id = cal.challenge_response_id
+WHERE
+    final_result <> 'null'
+GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
+            data=summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
+    protected async getL3ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let data: any = {}
+            const state = req.query.state;
+            let wherefilter = '';
+            if(state){
+                wherefilter = `WHERE org.state= '${state}'`;
+            }
+            const summary = await db.query(`SELECT 
+            org.state,
+            COALESCE((runners + winners),0) AS shortedlisted,
+            COALESCE(runners, 0) AS runners,
+            COALESCE(winners, 0) AS winners
+        FROM
+            organizations AS org
+                LEFT JOIN
+            (SELECT 
+                state,
+                    COUNT(CASE
+                        WHEN final_result = '0' THEN 1
+                    END) AS runners,
+                    COUNT(CASE
+                        WHEN final_result = '1' THEN 1
+                    END) AS winners
+            FROM
+                challenge_responses AS cal
+            WHERE
+                cal.status = 'SUBMITTED'
+            GROUP BY state) AS t2 ON org.state = t2.state
+            ${wherefilter}
+        GROUP BY org.state`, { type: QueryTypes.SELECT });
+            data=summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
 }
