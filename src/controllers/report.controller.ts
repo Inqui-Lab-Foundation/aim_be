@@ -1540,7 +1540,7 @@ export default class ReportController extends BaseController {
     protected async getideaReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let data: any = {}
-            const {state,district,themes,category} = req.query;
+            const {state,district,sdg,category} = req.query;
             let districtFilter: any = `'%%'`
             let categoryFilter:any = `'%%'`
             let stateFilter:any = `'%%'`
@@ -1554,8 +1554,8 @@ export default class ReportController extends BaseController {
             if(state!== 'All States' && state!== undefined){
                 stateFilter = `'${state}'`
             }
-            if(themes!=='All Themes' && themes!== undefined){
-                themesFilter = `'${themes}'`
+            if(sdg!=='All Themes' && sdg!== undefined){
+                themesFilter = `'${sdg}'`
             }
             const summary = await db.query(`SELECT 
             o.organization_code,
@@ -1609,7 +1609,7 @@ export default class ReportController extends BaseController {
     protected async getL1Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let data: any = {}
-            const {state,district,themes,category} = req.query;
+            const {state,district,sdg,category} = req.query;
             let districtFilter: any = `'%%'`
             let categoryFilter:any = `'%%'`
             let stateFilter:any = `'%%'`
@@ -1623,8 +1623,8 @@ export default class ReportController extends BaseController {
             if(state!== 'All States' && state!== undefined){
                 stateFilter = `'${state}'`
             }
-            if(themes!=='All Themes' && themes!== undefined){
-                themesFilter = `'${themes}'`
+            if(sdg!=='All Themes' && sdg!== undefined){
+                themesFilter = `'${sdg}'`
             }
             const summary = await db.query(`SELECT 
             o.organization_code,
@@ -1665,7 +1665,7 @@ export default class ReportController extends BaseController {
                 JOIN
             organizations AS o ON m.organization_code = o.organization_code
         WHERE
-            cha.evaluation_status = 'REJECTEDROUND1' || cha.evaluation_status = 'SELECTEDROUND1'
+            cha.evaluation_status in ('REJECTEDROUND1','SELECTEDROUND1')
         && cha.state like ${stateFilter} && cha.district like ${districtFilter} && cha.sdg like ${themesFilter} && o.category like ${categoryFilter};`, { type: QueryTypes.SELECT });
             data=summary;
             if (!data) {
@@ -1682,7 +1682,7 @@ export default class ReportController extends BaseController {
     protected async getL2Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let data: any = {}
-            const {state,district,themes,category} = req.query;
+            const {state,district,sdg,category} = req.query;
             let districtFilter: any = `'%%'`
             let categoryFilter:any = `'%%'`
             let stateFilter:any = `'%%'`
@@ -1696,8 +1696,8 @@ export default class ReportController extends BaseController {
             if(state!== 'All States' && state!== undefined){
                 stateFilter = `'${state}'`
             }
-            if(themes!=='All Themes' && themes!== undefined){
-                themesFilter = `'${themes}'`
+            if(sdg!=='All Themes' && sdg!== undefined){
+                themesFilter = `'${sdg}'`
             }
             const summary = await db.query(`SELECT 
             o.organization_code,
@@ -1773,7 +1773,7 @@ export default class ReportController extends BaseController {
     protected async getL3Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let data: any = {}
-            const {state,district,themes,category} = req.query;
+            const {state,district,sdg,category} = req.query;
             let districtFilter: any = `'%%'`
             let categoryFilter:any = `'%%'`
             let stateFilter:any = `'%%'`
@@ -1787,8 +1787,8 @@ export default class ReportController extends BaseController {
             if(state!== 'All States' && state!== undefined){
                 stateFilter = `'${state}'`
             }
-            if(themes!=='All Themes' && themes!== undefined){
-                themesFilter = `'${themes}'`
+            if(sdg!=='All Themes' && sdg!== undefined){
+                themesFilter = `'${sdg}'`
             }
             const summary = await db.query(`SELECT 
             o.organization_code,
