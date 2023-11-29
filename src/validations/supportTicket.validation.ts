@@ -8,6 +8,9 @@ export const supportTickets = Joi.object().keys({
     }),
     query_details: Joi.string().trim().min(1).required().messages({
         'string.empty': speeches.QUERY_DETAILS
+    }),
+    state: Joi.string().trim().min(1).required().messages({
+        'string.empty': speeches.QUERY_STATE
     })
 });
 

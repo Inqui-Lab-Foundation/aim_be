@@ -7,6 +7,7 @@ export interface supportTicketAttributes {
     query_category: string;
     query_details: string;
     status: Enumerator;
+    state: string;
     created_by: number;
     created_at: Date;
     updated_by: number;
@@ -33,6 +34,9 @@ support_ticket.init(
         status: {
             type: DataTypes.ENUM(...Object.values(constents.support_tickets_status_flags.list)),
             defaultValue: constents.support_tickets_status_flags.default
+        },
+        state :{
+            type: DataTypes.STRING,
         },
         created_by: {
             type: DataTypes.INTEGER,

@@ -37,8 +37,9 @@ export default class SupportTicketController extends BaseController {
                 this.model = model;
             };
             // pagination
-            const { page, size, status, user_id } = req.query;
+            const { page, size, status, user_id, state } = req.query;
             let condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
+            let stateFilter = state ? { state: { [Op.like]: `%${state}%` } } : null;
             let filteringBasedOnUser_id = user_id ? { created_by: user_id } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error => {
@@ -56,9 +57,6 @@ export default class SupportTicketController extends BaseController {
                             db.literal(`(SELECT o.district FROM organizations as o join mentors as m on o.organization_code = m.organization_code where user_id = \`support_ticket\`.\`created_by\` )`), 'district'
                         ],
                         [
-                            db.literal(`(SELECT o.state FROM organizations as o join mentors as m on o.organization_code = m.organization_code where user_id = \`support_ticket\`.\`created_by\` )`), 'state'
-                        ],
-                        [
                             db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = \`support_ticket\`.\`created_by\` )`), 'created_by'
                         ],
                         [
@@ -73,6 +71,7 @@ export default class SupportTicketController extends BaseController {
                         'status',
                         'created_at',
                         'updated_at',
+                        'state'
                     ],
                     where: {
                         [Op.and]: [
@@ -108,6 +107,7 @@ export default class SupportTicketController extends BaseController {
                             'status',
                             'created_at',
                             'updated_at',
+                            'state',
                             [
                                 db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = \`support_ticket\`.\`created_by\` )`), 'created_by'
                             ],
@@ -123,13 +123,11 @@ export default class SupportTicketController extends BaseController {
                             [
                                 db.literal(`(SELECT o.district FROM organizations as o join mentors as m on o.organization_code = m.organization_code where user_id = \`support_ticket\`.\`created_by\` )`), 'district'
                             ],
-                            [
-                                db.literal(`(SELECT o.state FROM organizations as o join mentors as m on o.organization_code = m.organization_code where user_id = \`support_ticket\`.\`created_by\` )`), 'state'
-                            ],
                             
                         ],
                         where: {
                             [Op.and]: [
+                                stateFilter,
                                 condition,
                                 filteringBasedOnUser_id
                             ]
