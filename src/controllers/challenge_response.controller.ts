@@ -1184,6 +1184,7 @@ export default class ChallengeResponsesController extends BaseController {
             const evaluation_status: any = req.query.evaluation_status;
             const district: any = req.query.district;
             const sdg: any = req.query.sdg;
+            const state: any = req.query.state;
             const rejected_reason: any = req.query.rejected_reason;
             const rejected_reasonSecond: any = req.query.rejected_reasonSecond;
             const level: any = req.query.level;
@@ -1199,6 +1200,9 @@ export default class ChallengeResponsesController extends BaseController {
             }
             if (sdg) {
                 additionalFilter['sdg'] = sdg && typeof sdg == 'string' ? sdg : {}
+            }
+            if (state) {
+                additionalFilter['state'] = state && typeof state == 'string' ? state : {}
             }
             if (rejected_reason) {
                 additionalFilter['rejected_reason'] = rejected_reason && typeof rejected_reason == 'string' ? rejected_reason : {}
