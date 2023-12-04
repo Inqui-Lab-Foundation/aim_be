@@ -11,7 +11,7 @@ import ValidationsHolder from '../validations/validationHolder';
 import validationMiddleware from '../middlewares/validation.middleware';
 import { constents } from '../configs/constents.config';
 import CryptoJS from 'crypto-js';
-import { Op } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import { user } from '../models/user.model';
 import { team } from '../models/team.model';
 import { baseConfig } from '../configs/base.config';
@@ -52,6 +52,7 @@ export default class StudentController extends BaseController {
         this.router.post(`${this.path}/:student_user_id/badges`, this.addBadgeToStudent.bind(this));
         this.router.get(`${this.path}/:student_user_id/badges`, this.getStudentBadges.bind(this));
         this.router.get(`${this.path}/passwordUpdate`, this.studentPasswordUpdate.bind(this));
+        this.router.post(`${this.path}/stuIdeaSubmissionEmail`,this.stuIdeaSubmissionEmail.bind(this));
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -683,6 +684,58 @@ export default class StudentController extends BaseController {
                 throw updateCertificate;
             }
             return res.status(200).send(dispatcher(res, updateCertificate, 'Certificate Updated'));
+        } catch (error) {
+            next(error);
+        }
+    }
+    private async stuIdeaSubmissionEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const { mentor_id,team_id,team_name,title} = req.body;
+            let data: any = {}
+            const contentText = `
+            <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+        <div style="padding: 1% 5%;">
+        <h3> Dear ${team_name} team,</h3>
+
+            <p>Your project has been successfully submitted in ATL Marathon 23-24.</p>
+            
+            <p>Project Titled: ${title}</p>
+            <p>We have received your project and it is currently in our review process. Our team will assess your work, and we will notify you of the evaluation results.</p>
+            
+            <p>We appreciate your hard work and dedication to this project, and we look forward to providing you with feedback and results as soon as possible.</p>
+            <p>Thank you for participating In ATL Marathon.</p>
+            <p>
+            <strong>
+            Regards,<br>
+            ATL Marathon</strong></p></div></body>`;
+            const subject = `ATL marathon - Idea submission successful`
+            const summary = await db.query(`SELECT GROUP_CONCAT(username SEPARATOR ', ') AS all_usernames
+            FROM (
+                    SELECT 
+                    u.username
+                FROM
+                    mentors AS m
+                        JOIN
+                    users AS u ON m.user_id = u.user_id
+                WHERE
+                    m.mentor_id = ${mentor_id}
+                UNION ALL
+                    SELECT 
+                    u.username
+                FROM
+                    students AS s
+                        JOIN
+                    users AS u ON s.user_id = u.user_id
+                WHERE
+                    s.team_id = ${team_id}
+            ) AS combined_usernames;`, { type: QueryTypes.SELECT });
+           data= summary;
+            const usernameArray = data[0].all_usernames;
+            let arrayOfUsernames = usernameArray.split(', ');
+            const result = await this.authService.triggerBulkEmail(arrayOfUsernames,contentText,subject);
+            
+            return res.status(200).send(dispatcher(res, result, 'Email sent'));
         } catch (error) {
             next(error);
         }
