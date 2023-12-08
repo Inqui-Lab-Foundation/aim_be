@@ -707,6 +707,54 @@ export default class authService {
             return error;
         }
     }
+    //bulk email process
+    async triggerBulkEmail(email: any,textBody:any,subText:any) {
+        const result: any = {}
+        AWS.config.update({
+            region: 'ap-south-1',
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        });
+        let params = {
+            Destination: { /* required */
+                CcAddresses: [
+                ],
+                ToAddresses:
+                    email
+            },
+            Message: { /* required */
+                Body: { /* required */
+                    Html: {
+                        Charset: "UTF-8",
+                        Data: textBody
+                    },
+                    Text: {
+                        Charset: "UTF-8",
+                        Data: "TEXT_FOR MAT_BODY"
+                    }
+                },
+                Subject: {
+                    Charset: 'UTF-8',
+                    Data: subText
+                }
+            },
+            Source: "aim-no-reply@inqui-lab.org", /* required */
+            ReplyToAddresses: [],
+        };
+        try {
+            // Create the promise and SES service object
+            let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
+            // Handle promise's fulfilled/rejected states
+            await sendPromise.then((data: any) => {
+                result['messageId'] = data.MessageId;
+            }).catch((err: any) => {
+                throw err;
+            });
+            return result;
+        } catch (error) {
+            return error;
+        }
+    }
     async verifyUser(requestBody: any, responseBody: any) {
         let result: any = {};
         try {

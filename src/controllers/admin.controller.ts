@@ -9,6 +9,8 @@ import { user } from '../models/user.model';
 import { admin } from '../models/admin.model';
 import { adminSchema, adminUpdateSchema } from '../validations/admins.validationa';
 import { badRequest, notFound } from 'boom';
+import db from "../utils/dbconnection.util"
+import { QueryTypes } from 'sequelize';
 
 export default class AdminController extends BaseController {
     model = "admin";
@@ -28,6 +30,9 @@ export default class AdminController extends BaseController {
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
+        this.router.post(`${this.path}/IdeaInDraftEmail`,this.IdeaInDraftEmail.bind(this));
+        this.router.post(`${this.path}/IdeaNotInitiatedEmail`,this.IdeaNotInitiatedEmail.bind(this));
+        
         super.initializeRoutes();
     }
     protected getData(req: Request, res: Response, next: NextFunction) {
@@ -149,4 +154,116 @@ export default class AdminController extends BaseController {
     //         return res.status(202).send(dispatcher(res,result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
     //     }
     // }
+    private async IdeaInDraftEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const { date } = req.body;
+            let data: any = {}
+            const contentText = `
+            <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+        <div style="padding: 1% 5%;">
+        <h3>Dear Team Members,</h3>
+
+            <p>As the Last date to submit your project in ATL Marathon 23-24 is ${date} , we noticed that your team is yet to submit the idea.</p>
+
+            <p>Project submission status : InDraft</p>
+            <p>Please ensure that idea details are fully updated and submitted on or before the deadline.</p>
+
+            <p>Looking forward for your brilliant project works. Thank you for participating In ATL Marathon.</p>
+            <p>
+            <strong>
+            Regards,<br>
+            ATL Marathon</strong></p></div></body>`;
+            const subject = `ATL Marathon Idea submission is incomplete`
+            const summary = await db.query(`SELECT 
+            GROUP_CONCAT(username
+                SEPARATOR ', ') AS all_usernames
+        FROM
+            (SELECT DISTINCT
+                u.username
+            FROM
+                challenge_responses AS cal
+            JOIN teams AS t ON cal.team_id = t.team_id
+            JOIN mentors AS m ON t.mentor_id = m.mentor_id
+            JOIN users AS u ON m.user_id = u.user_id
+            WHERE
+                cal.status = 'DRAFT' UNION ALL SELECT 
+                u.username
+            FROM
+                challenge_responses AS cal
+            JOIN users AS u ON cal.initiated_by = u.user_id
+            WHERE
+                cal.status = 'DRAFT') AS combined_usernames;`, { type: QueryTypes.SELECT });
+           data= summary;
+            const usernameArray = data[0].all_usernames;
+            let arrayOfUsernames = usernameArray.split(', ');
+            const result = await this.authService.triggerBulkEmail(arrayOfUsernames,contentText,subject);
+            return res.status(200).send(dispatcher(res, result, 'Email sent'));
+        } catch (error) {
+            next(error);
+        }
+    }
+    private async IdeaNotInitiatedEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const { date } = req.body;
+            let data: any = {}
+            const contentText = `
+            <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+        <div style="padding: 1% 5%;">
+        <h3>Dear Team Members,</h3>
+
+            <p>As the Last date to submit your project in ATL Marathon 23-24 is ${date} , we noticed that your team is yet to submit the idea.</p>
+
+            <p>Project submission status : Not Initiated</p>
+            <p>Please ensure that idea details are fully updated and submitted on or before the deadline.</p>
+
+            <p>Looking forward for your brilliant project works. Thank you for participating In ATL Marathon.</p>
+            <p>
+            <strong>
+            Regards,<br>
+            ATL Marathon</strong></p></div></body>`;
+            const subject = `ATL Marathon Idea submission is incomplete`
+            const summary = await db.query(`SELECT 
+            GROUP_CONCAT(username
+                SEPARATOR ', ') AS all_usernames
+        FROM
+            (SELECT DISTINCT
+                u.username
+            FROM
+                (SELECT 
+                team_id
+            FROM
+                teams
+            WHERE
+                team_id NOT IN (SELECT 
+                        team_id
+                    FROM
+                        challenge_responses)) AS st
+            JOIN teams AS t ON st.team_id = t.team_id
+            JOIN mentors AS m ON t.mentor_id = m.mentor_id
+            JOIN users AS u ON m.user_id = u.user_id UNION ALL SELECT 
+                u.username
+            FROM
+                (SELECT 
+                team_id
+            FROM
+                teams
+            WHERE
+                team_id NOT IN (SELECT 
+                        team_id
+                    FROM
+                        challenge_responses)) AS st
+            JOIN students AS s ON st.team_id = s.team_id
+            JOIN users AS u ON s.user_id = u.user_id) AS combined_usernames;`, { type: QueryTypes.SELECT });
+           data= summary;
+            const usernameArray = data[0].all_usernames;
+            let arrayOfUsernames = usernameArray.split(', ');
+            
+            const result = await this.authService.triggerBulkEmail(arrayOfUsernames,contentText,subject);
+            return res.status(200).send(dispatcher(res, result, 'Email sent'));
+        } catch (error) {
+            next(error);
+        }
+    }
 };
