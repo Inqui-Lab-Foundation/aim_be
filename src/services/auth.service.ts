@@ -851,9 +851,7 @@ export default class authService {
             if (otp instanceof Error) {
                 throw otp;
             }
-            const key = "PMBXDE9N53V89K65"
-            const stringotp = String(otp.otp);
-            const hashedPassword = CryptoJS.AES.encrypt(stringotp, key).toString();
+            const hashedPassword = await this.encryptGlobal(JSON.stringify(otp.otp));
             result.data = hashedPassword;
             return result;
             }
@@ -1319,6 +1317,32 @@ export default class authService {
             return false
         } catch (err) {
             return err
+        }
+    }
+
+    /** encrypt code */
+    async encryptGlobal(data: any) {
+        const apikey = 'PMBXDE9N53V89K65';
+        try {
+            const encryptedValue = CryptoJS.AES.encrypt(data, apikey).toString();
+            const encoded = btoa(encryptedValue);
+            return encoded;
+        } catch (error) {
+            console.error('Encryption error:', error);
+            return error;
+        }
+    }
+
+     /** decrypt code */
+    async decryptGlobal(data: any) {
+        const apikey = 'PMBXDE9N53V89K65';
+        try {
+            const decoded = atob(data);
+            const decryptValue = CryptoJS.AES.decrypt(decoded, apikey).toString(CryptoJS.enc.Utf8);
+            return decryptValue;
+        } catch (error) {
+            console.error('Decryption error:', error);
+            return error;
         }
     }
 }

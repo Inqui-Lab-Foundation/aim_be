@@ -192,10 +192,8 @@ export default class MentorController extends BaseController {
                 { state: { [Op.like]: req.query.state } } :
                 { state: { [Op.like]: `%%` } }
             if (id) {
-                const key = "PMBXDE9N53V89K65";
-                const decoded = atob(req.params.id);
-                const UNhashedPassword = CryptoJS.AES.decrypt(decoded, key).toString(CryptoJS.enc.Utf8);
-                where[`${this.model}_id`] = UNhashedPassword;
+                const deValue = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = deValue;
                 data = await this.crudService.findOne(modelClass, {
                     attributes: {
                         include: [
