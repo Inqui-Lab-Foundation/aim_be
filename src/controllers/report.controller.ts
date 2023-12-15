@@ -20,6 +20,7 @@ import { team } from "../models/team.model";
 import {baseConfig} from "../configs/base.config";
 import SchoolDReportService from "../services/schoolDReort.service";
 import StudentDReportService from "../services/studentDReort.service";
+import IdeaReportService from "../services/ideaReort.service";
 //import { reflective_quiz_response } from '../models/reflective_quiz_response.model';
 
 export default class ReportController extends BaseController {
@@ -58,6 +59,7 @@ export default class ReportController extends BaseController {
         this.router.get(`${this.path}/studentdetailstable`, this.getstudentDetailstable.bind(this));
         this.router.get(`${this.path}/refreshSchoolDReport`, this.refreshSchoolDReport.bind(this));
         this.router.get(`${this.path}/refreshStudentDReport`, this.refreshStudentDReport.bind(this));
+        this.router.get(`${this.path}/refreshIdeaReport`, this.refreshIdeaReport.bind(this));
         this.router.get(`${this.path}/studentATLnonATLcount`, this.getstudentATLnonATLcount.bind(this));
         this.router.get(`${this.path}/ideadeatilreport`, this.getideaReport.bind(this));
         this.router.get(`${this.path}/L1deatilreport`, this.getL1Report.bind(this));
@@ -1537,6 +1539,16 @@ export default class ReportController extends BaseController {
             next(err)
         }
     }
+    private async refreshIdeaReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const service = new IdeaReportService()
+            await service.executeIdeaDReport()
+            const result = 'idea Report SQL queries executed successfully.'
+            res.status(200).json(dispatcher(res, result, "success"))
+        } catch (err) {
+            next(err);
+        }
+    }
     protected async getideaReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let data: any = {}
@@ -1558,42 +1570,26 @@ export default class ReportController extends BaseController {
                 themesFilter = `'${sdg}'`
             }
             const summary = await db.query(`SELECT 
-            o.organization_code,
-            o.unique_code,
-            o.state,
-            o.district,
+            organization_code,
+            unique_code,
+            state,
+            district,
             challenge_response_id,
-            o.organization_name,
-            o.category,
-            o.pin_code,
-            o.address,
-            m.full_name,
-            (SELECT 
-                    username
-                FROM
-                    users
-                WHERE
-                    user_id = m.user_id) AS email,
-            m.mobile,
-            t.team_name,
-            (SELECT 
-                    GROUP_CONCAT(full_name
-                            SEPARATOR ', ') AS names
-                FROM
-                    students
-                WHERE
-                    team_id = cha.team_id) AS 'Students names',
+            organization_name,
+            category,
+            pin_code,
+            address,
+            full_name,
+            email,
+            mobile,
+            team_name,
+            students_names AS 'Students names',
             sdg,
             sub_category,
             response
         FROM
-            challenge_responses AS cha
-                JOIN
-            teams AS t ON cha.team_id = t.team_id
-                JOIN
-            mentors AS m ON t.mentor_id = m.mentor_id
-                JOIN
-            organizations AS o ON m.organization_code = o.organization_code where cha.status = 'SUBMITTED' && cha.state like ${stateFilter} && cha.district like ${districtFilter} && cha.sdg like ${themesFilter} && o.category like ${categoryFilter};`, { type: QueryTypes.SELECT });
+            idea_report
+            where status = 'SUBMITTED' && state like ${stateFilter} && district like ${districtFilter} && sdg like ${themesFilter} && category like ${categoryFilter};`, { type: QueryTypes.SELECT });
             data=summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
@@ -1627,46 +1623,27 @@ export default class ReportController extends BaseController {
                 themesFilter = `'${sdg}'`
             }
             const summary = await db.query(`SELECT 
-            o.organization_code,
-            o.unique_code,
-            o.state,
-            o.district,
+            organization_code,
+            unique_code,
+            state,
+            district,
             challenge_response_id,
-            o.organization_name,
-            o.category,
-            o.pin_code,
-            o.address,
-            m.full_name,
-            (SELECT 
-                    username
-                FROM
-                    users
-                WHERE
-                    user_id = m.user_id) AS email,
-            m.mobile,
-            t.team_name,
-            (SELECT 
-                    GROUP_CONCAT(full_name
-                            SEPARATOR ', ') AS names
-                FROM
-                    students
-                WHERE
-                    team_id = cha.team_id) AS 'Students names',
+            organization_name,
+            category,
+            pin_code,
+            address,
+            full_name,
+            email,
+            mobile,
+            team_name,
+            students_names AS 'Students names',
             sdg,
             sub_category,
             response,
             evaluation_status
         FROM
-            challenge_responses AS cha
-                JOIN
-            teams AS t ON cha.team_id = t.team_id
-                JOIN
-            mentors AS m ON t.mentor_id = m.mentor_id
-                JOIN
-            organizations AS o ON m.organization_code = o.organization_code
-        WHERE
-            cha.evaluation_status in ('REJECTEDROUND1','SELECTEDROUND1')
-        && cha.state like ${stateFilter} && cha.district like ${districtFilter} && cha.sdg like ${themesFilter} && o.category like ${categoryFilter};`, { type: QueryTypes.SELECT });
+            idea_report
+            where evaluation_status in ('REJECTEDROUND1','SELECTEDROUND1') && state like ${stateFilter} && district like ${districtFilter} && sdg like ${themesFilter} && category like ${categoryFilter};`, { type: QueryTypes.SELECT });
             data=summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
@@ -1700,64 +1677,30 @@ export default class ReportController extends BaseController {
                 themesFilter = `'${sdg}'`
             }
             const summary = await db.query(`SELECT 
-            o.organization_code,
-            o.unique_code,
-            o.state,
-            o.district,
+            organization_code,
+            unique_code,
+            state,
+            district,
             challenge_response_id,
-            o.organization_name,
-            o.category,
-            o.pin_code,
-            o.address,
-            m.full_name,
-            (SELECT 
-                    username
-                FROM
-                    users
-                WHERE
-                    user_id = m.user_id) AS email,
-            m.mobile,
-            t.team_name,
-            (SELECT 
-                    GROUP_CONCAT(full_name
-                            SEPARATOR ', ') AS names
-                FROM
-                    students
-                WHERE
-                    team_id = cha.team_id) AS 'Students names',
+            organization_name,
+            category,
+            pin_code,
+            address,
+            full_name,
+            email,
+            mobile,
+            team_name,
+            students_names AS 'Students names',
             sdg,
             sub_category,
             response,
-            (SELECT 
-                    AVG(overall)
-                FROM
-                    evaluator_ratings
-                WHERE
-                    evaluator_ratings.challenge_response_id = cha.challenge_response_id) AS 'Overall score',
-            (SELECT 
-                    (AVG(param_1) + AVG(param_2)) / 2 AS sum_params
-                FROM
-                    evaluator_ratings
-                WHERE
-                    evaluator_ratings.challenge_response_id = cha.challenge_response_id) AS 'Quality score',
-            (SELECT 
-                    (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS sum_params
-                FROM
-                    evaluator_ratings
-                WHERE
-                    evaluator_ratings.challenge_response_id = cha.challenge_response_id) AS 'Feasibility score',
+            overall_score AS 'Overall score',
+            quality_score AS 'Quality score',
+            feasibility_score AS 'Feasibility score',
             final_result
         FROM
-            challenge_responses AS cha
-                JOIN
-            teams AS t ON cha.team_id = t.team_id
-                JOIN
-            mentors AS m ON t.mentor_id = m.mentor_id
-                JOIN
-            organizations AS o ON m.organization_code = o.organization_code
-        WHERE
-            cha.evaluation_status = 'SELECTEDROUND1'
-            && cha.state like ${stateFilter} && cha.district like ${districtFilter} && cha.sdg like ${themesFilter} && o.category like ${categoryFilter};`, { type: QueryTypes.SELECT });
+            idea_report
+            where evaluation_status = 'SELECTEDROUND1' && state like ${stateFilter} && district like ${districtFilter} && sdg like ${themesFilter} && category like ${categoryFilter};`, { type: QueryTypes.SELECT });
             data=summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
@@ -1791,64 +1734,30 @@ export default class ReportController extends BaseController {
                 themesFilter = `'${sdg}'`
             }
             const summary = await db.query(`SELECT 
-            o.organization_code,
-            o.unique_code,
-            o.state,
-            o.district,
+            organization_code,
+            unique_code,
+            state,
+            district,
             challenge_response_id,
-            o.organization_name,
-            o.category,
-            o.pin_code,
-            o.address,
-            m.full_name,
-            (SELECT 
-                    username
-                FROM
-                    users
-                WHERE
-                    user_id = m.user_id) AS email,
-            m.mobile,
-            t.team_name,
-            (SELECT 
-                    GROUP_CONCAT(full_name
-                            SEPARATOR ', ') AS names
-                FROM
-                    students
-                WHERE
-                    team_id = cha.team_id) AS 'Students names',
+            organization_name,
+            category,
+            pin_code,
+            address,
+            full_name,
+            email,
+            mobile,
+            team_name,
+            students_names AS 'Students names',
             sdg,
             sub_category,
             response,
-            (SELECT 
-                    AVG(overall)
-                FROM
-                    evaluator_ratings
-                WHERE
-                    evaluator_ratings.challenge_response_id = cha.challenge_response_id) AS 'Overall score',
-            (SELECT 
-                    (AVG(param_1) + AVG(param_2)) / 2 AS sum_params
-                FROM
-                    evaluator_ratings
-                WHERE
-                    evaluator_ratings.challenge_response_id = cha.challenge_response_id) AS 'Quality score',
-            (SELECT 
-                    (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS sum_params
-                FROM
-                    evaluator_ratings
-                WHERE
-                    evaluator_ratings.challenge_response_id = cha.challenge_response_id) AS 'Feasibility score',
+            overall_score AS 'Overall score',
+            quality_score AS 'Quality score',
+            feasibility_score AS 'Feasibility score',
             final_result
         FROM
-            challenge_responses AS cha
-                JOIN
-            teams AS t ON cha.team_id = t.team_id
-                JOIN
-            mentors AS m ON t.mentor_id = m.mentor_id
-                JOIN
-            organizations AS o ON m.organization_code = o.organization_code
-        WHERE
-            cha.final_result <>'null'
-            && cha.state like ${stateFilter} && cha.district like ${districtFilter} && cha.sdg like ${themesFilter} && o.category like ${categoryFilter};`, { type: QueryTypes.SELECT });
+            idea_report
+            where final_result <>'null' && state like ${stateFilter} && district like ${districtFilter} && sdg like ${themesFilter} && category like ${categoryFilter};`, { type: QueryTypes.SELECT });
             data=summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
