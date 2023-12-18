@@ -19,10 +19,11 @@ import { mentor } from "../models/mentor.model";
 import { organization } from "../models/organization.model";
 import { user } from "../models/user.model";
 import { student } from "../models/student.model";
+import authService from '../services/auth.service';
 export default class QuizSurveyController extends BaseController {
 
     model = "quiz_survey";
-
+    authService: authService = new authService;
     protected initializePath(): void {
         this.path = '/quizSurveys';
     }
@@ -174,23 +175,30 @@ export default class QuizSurveyController extends BaseController {
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
             let user_id = res.locals.user_id;
             if (!user_id) {
                 throw unauthorized(speeches.UNAUTHORIZED_ACCESS)
             }
-            let role:any = req.query.role;
+            let role:any = newREQQuery.role;
             
             if(role && !Object.keys(constents.user_role_flags.list).includes(role)){
                 role = "MENTOR"
             }
             let data: any;
             const { model, id } = req.params;
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             if (model) {
                 this.model = model;
             };
             // pagination
-            const { page, size, title } = req.query;
+            const { page, size, title } = newREQQuery;
             let condition:any = {};
             if(title){
                 condition.title =  { [Op.like]: `%${title}%` } 
@@ -219,7 +227,8 @@ export default class QuizSurveyController extends BaseController {
                 addWhereClauseStatusPart = true;
             }
             if (id) {
-                where[`${this.model}_id`] = req.params.id;
+                const newParamId = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = newParamId;
                 data = await this.crudService.findOne(modelClass, {
                     attributes:[
                         "quiz_survey_id",

@@ -74,13 +74,20 @@ export default class MentorController extends BaseController {
     }
     protected async getMentorRegStatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
             const { quiz_survey_id } = req.params
-            const { page, size, status } = req.query;
+            const { page, size, status } = newREQQuery;
             let condition = {}
             // condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
 
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let boolStatusWhereClauseRequired = false;
@@ -151,13 +158,20 @@ export default class MentorController extends BaseController {
         try {
             let data: any;
             const { model, id } = req.params;
-            const paramStatus: any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const paramStatus: any = newREQQuery.status;
             if (model) {
                 this.model = model;
             };
             // const current_user = res.locals.user_id; 
             // pagination
-            const { page, size, status } = req.query;
+            const { page, size, status } = newREQQuery;
             // let condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error => {
@@ -187,9 +201,9 @@ export default class MentorController extends BaseController {
             // if (current_user !== getUserIdFromMentorId.getDataValue("user_id")) {
             //     throw forbidden();
             // };
-            let state: any = req.query.state;
+            let state: any = newREQQuery.state;
             let whereClauseOfState: any = state && state !== 'All States' ?
-                { state: { [Op.like]: req.query.state } } :
+                { state: { [Op.like]: newREQQuery.state } } :
                 { state: { [Op.like]: `%%` } }
             if (id) {
                 const deValue = await this.authService.decryptGlobal(req.params.id);
@@ -300,7 +314,8 @@ export default class MentorController extends BaseController {
             };
             const user_id = res.locals.user_id
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded)
             const findMentorDetail = await this.crudService.findOne(modelLoaded, { where: where });
@@ -483,7 +498,14 @@ export default class MentorController extends BaseController {
     //TODO: test this api and debug and fix any issues in testing if u see any ...!!
     private async deleteAllData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const { mentor_user_id } = req.params;
+            let newREParams : any = {};
+            if(req.params){
+                const newParams : any = await this.authService.decryptGlobal(req.params);
+                newREParams = JSON.parse(newParams);
+            }else {
+                newREParams = req.params
+            }
+            const { mentor_user_id } = newREParams;
             // const { mobile } = req.body;
             if (!mentor_user_id) {
                 throw badRequest(speeches.USER_USERID_REQUIRED);
@@ -729,9 +751,16 @@ export default class MentorController extends BaseController {
         try {
             let data: any ={};
             const { model} = req.params;
-            const id = req.query.id;
-            const user_id = req.query.user_id;
-            const paramStatus: any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const id = newREQQuery.id;
+            const user_id = newREQQuery.user_id;
+            const paramStatus: any = newREQQuery.status;
             if (model) {
                 this.model = model;
             };

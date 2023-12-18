@@ -46,8 +46,15 @@ export default class ResourceController extends BaseController {
     protected async getMentorResources(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try{
             let data: any;
-            const paramRole: any  = req.query.role;
-            const paramStatus: any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const paramRole: any  = newREQQuery.role;
+            const paramStatus: any = newREQQuery.status;
             const whereClauseRolePart = { "role": paramRole }
             data = await this.crudService.findAll(resource, {
                 where: {

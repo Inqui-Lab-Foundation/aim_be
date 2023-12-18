@@ -57,14 +57,21 @@ export default class StudentController extends BaseController {
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
             let data: any;
             const { model, id } = req.params;
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             if (model) {
                 this.model = model;
             };
             // pagination
-            const { page, size, adult } = req.query;
+            const { page, size, adult } = newREQQuery;
             let condition = adult ? { UUID: null } : { UUID: { [Op.like]: `%%` } };
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error => {
@@ -85,14 +92,15 @@ export default class StudentController extends BaseController {
                 whereClauseStatusPart = { "status": "ACTIVE" };
                 boolStatusWhereClauseRequired = true;
             };
-            let state: any = req.query.state;
+            let state: any = newREQQuery.state;
             let stateFilter: any = {}
             if (state) {
                 stateFilter['whereClause'] = state && typeof state == 'string' && state !== 'All States' ? { state } : {}
                 stateFilter["liter"] = state && typeof state == 'string' && state !== 'All States' ? db.literal('`team->mentor->organization`.`state` = ' + JSON.stringify(state)) : {}
             }
             if (id) {
-                where[`${this.model}_id`] = req.params.id;
+                const newParamId = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = newParamId;
                 data = await this.crudService.findOne(modelClass, {
                     attributes: {
                         include: [
@@ -251,7 +259,8 @@ export default class StudentController extends BaseController {
             }
 
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
             if (req.body.username) {
@@ -309,7 +318,8 @@ export default class StudentController extends BaseController {
             const { model, id } = req.params;
             if (model) this.model = model;
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const getUserIdFromStudentData = await this.crudService.findOne(student, { where: { student_id: where.student_id } });
             if (!getUserIdFromStudentData) throw notFound(speeches.USER_NOT_FOUND);
             if (getUserIdFromStudentData instanceof Error) throw getUserIdFromStudentData;
@@ -499,7 +509,14 @@ export default class StudentController extends BaseController {
     private async addBadgeToStudent(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             //todo: test this api : haven't manually tested this api yet 
-            const student_user_id: any = req.params.student_user_id;
+            let newREParams : any = {};
+            if(req.params){
+                const newParams : any = await this.authService.decryptGlobal(req.params);
+                newREParams = JSON.parse(newParams);
+            }else {
+                newREParams = req.params
+            }
+            const student_user_id: any = newREParams.student_user_id;
             const badges_ids: any = req.body.badge_ids;
             const badges_slugs: any = req.body.badge_slugs;
             let areSlugsBeingUsed = true;
@@ -588,7 +605,14 @@ export default class StudentController extends BaseController {
     private async getStudentBadges(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         //todo: implement this api ...!!
         try {
-            const student_user_id: any = req.params.student_user_id;
+            let newREParams : any = {};
+            if(req.params){
+                const newParams : any = await this.authService.decryptGlobal(req.params);
+                newREParams = JSON.parse(newParams);
+            }else {
+                newREParams = req.params
+            }
+            const student_user_id: any = newREParams.student_user_id;
             const serviceStudent = new StudentService()
             let studentBadgesObj: any = await serviceStudent.getStudentBadges(student_user_id);
             ///do not do empty or null check since badges obj can be null if no badges earned yet hence this is not an error condition 
@@ -599,7 +623,14 @@ export default class StudentController extends BaseController {
                 studentBadgesObj = {};
             }
             const studentBadgesObjKeysArr = Object.keys(studentBadgesObj)
-            const paramStatus: any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const paramStatus: any = newREQQuery.status;
             const where: any = {};
             let whereClauseStatusPart: any = {};
             if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
@@ -663,13 +694,20 @@ export default class StudentController extends BaseController {
     }
     private async studentCertificate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const { model, student_user_id } = req.params;
+            let newREParams : any = {};
+            if(req.params){
+                const newParams : any = await this.authService.decryptGlobal(req.params);
+                newREParams = JSON.parse(newParams);
+            }else {
+                newREParams = req.params
+            }
+            const { model, student_user_id } = newREParams;
             const user_id = res.locals.user_id
             if (model) {
                 this.model = model;
             };
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            where[`${this.model}_id`] = newREParams.id;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
             payload["certificate"] = new Date().toLocaleString();

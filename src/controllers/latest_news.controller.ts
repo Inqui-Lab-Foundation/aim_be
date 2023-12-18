@@ -27,8 +27,15 @@ export default class LatestNewsController extends BaseController {
     protected async getlist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try{
             let data: any;
-            const paramCategory: any  = req.query.category;
-            const paramStatus: any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const paramCategory: any  = newREQQuery.category;
+            const paramStatus: any = newREQQuery.status;
             const whereClauseRolePart = { "category": paramCategory }
             data = await this.crudService.findAll(latest_news, {
                 where: {

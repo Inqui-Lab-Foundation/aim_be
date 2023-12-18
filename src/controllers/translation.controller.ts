@@ -29,7 +29,14 @@ export default class TranslationController extends BaseController {
     }
     protected async getTrasnlationKey(req:Request,res:Response,next:NextFunction){
         try{
-            const value:any = req.query.val
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const value:any = newREQQuery.val
             if(!value){
                 throw badRequest();
             }

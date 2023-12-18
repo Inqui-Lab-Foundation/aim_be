@@ -39,7 +39,14 @@ export default class MentorCourseController extends BaseController {
         if (!user_id) {
             throw unauthorized(speeches.UNAUTHORIZED_ACCESS)
         }
-        const { id } = req.params;
+        let newREParams : any = {};
+            if(req.params){
+                const newParams : any = await this.authService.decryptGlobal(req.params);
+                newREParams = JSON.parse(newParams);
+            }else {
+                newREParams = req.params
+            }
+        const { id } = newREParams;
         const objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
         let includePart = null
         let orderBypart:any = []

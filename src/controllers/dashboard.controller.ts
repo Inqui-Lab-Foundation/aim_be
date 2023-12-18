@@ -89,8 +89,13 @@ export default class DashboardController extends BaseController {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     private async getMentorStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const { mentor_user_id } = req.params;
-            const paramStatus: any = req.query.status;
+            let newREParams : any = {};
+            const newParams : any = await this.authService.decryptGlobal(req.params);
+            newREParams = JSON.parse(newParams);
+            let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+            const newREQQuery  = JSON.parse(newQuery);
+            const { mentor_user_id } = newREParams;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -250,8 +255,13 @@ export default class DashboardController extends BaseController {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     private async getStudentStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const { student_user_id } = req.params;
-            const paramStatus: any = req.query.status;
+            let newREParams : any = {};
+            const newParams : any = await this.authService.decryptGlobal(req.params);
+            newREParams = JSON.parse(newParams);
+            const { student_user_id } = newREParams;
+            let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+            const newREQQuery  = JSON.parse(newQuery);
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -373,8 +383,13 @@ export default class DashboardController extends BaseController {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     private async getTeamStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const { team_id } = req.params;
-            const paramStatus: any = req.query.status;
+            let newREParams : any = {};
+            const newParams : any = await this.authService.decryptGlobal(req.params);
+            newREParams = JSON.parse(newParams);
+            const { team_id } = newREParams;
+            let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+            const newREQQuery  = JSON.parse(newQuery);
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -502,9 +517,13 @@ export default class DashboardController extends BaseController {
 
     private async getStudentChallengeDetails(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-
-            const { student_user_id } = req.params;
-            const paramStatus: any = req.query.status;
+            let newREParams : any = {};
+            const newParams : any = await this.authService.decryptGlobal(req.params);
+            newREParams = JSON.parse(newParams);
+            const { student_user_id } = newREParams;
+            let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+            const newREQQuery  = JSON.parse(newQuery);
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -566,8 +585,13 @@ export default class DashboardController extends BaseController {
     }
     private async getTeamProgress(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const { student_user_id } = req.params;
-            const paramStatus: any = req.query.status;
+            let newREParams : any = {};
+            const newParams : any = await this.authService.decryptGlobal(req.params);
+            newREParams = JSON.parse(newParams);
+            const { student_user_id } = newREParams;
+            let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+            const newREQQuery  = JSON.parse(newQuery);
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -702,7 +726,9 @@ export default class DashboardController extends BaseController {
     protected async getLoggedInUserCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let response: any;
-            const paramStatus: any = req.query.status;
+            let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+            const newREQQuery  = JSON.parse(newQuery);
+            const paramStatus: any = newREQQuery.status;
             // let  timer: any = req.body.time;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
@@ -737,7 +763,14 @@ export default class DashboardController extends BaseController {
     protected async getUserQuizScores(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try{
             let result :any = {};
-            const {user_id,role} = req.query
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {user_id,role} = newREQQuery
             const quizscores = await db.query(`SELECT user_id,quiz_id,attempts,score FROM unisolve_db.quiz_responses where user_id = ${user_id}`,{ type: QueryTypes.SELECT })
             result['scores'] = quizscores
             if(role==="MENTOR"){
@@ -754,7 +787,14 @@ export default class DashboardController extends BaseController {
     protected async getteamCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try{
             let result :any = {};
-            const {mentor_id} = req.query
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {mentor_id} = newREQQuery
             if(mentor_id){
                 result = await db.query(`SELECT count(*) as teams_count FROM teams where mentor_id = ${mentor_id}`,{ type: QueryTypes.SELECT });
             }
@@ -779,7 +819,14 @@ export default class DashboardController extends BaseController {
     protected async getstudentCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try{
             let result :any = {};
-            const {mentor_id} = req.query
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {mentor_id} = newREQQuery
             if(mentor_id){
                 result = await db.query(`SELECT count(*) as student_count FROM students join teams on students.team_id = teams.team_id  where mentor_id = ${mentor_id};`,{ type: QueryTypes.SELECT });
             }
@@ -806,7 +853,14 @@ export default class DashboardController extends BaseController {
     protected async getideaCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try{
             let result :any = {};
-            const {mentor_id} = req.query
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {mentor_id} = newREQQuery
             if(mentor_id){
                 result = await db.query(`SELECT count(*) as idea_count FROM challenge_responses join teams on challenge_responses.team_id = teams.team_id where mentor_id = ${mentor_id} && challenge_responses.status = 'SUBMITTED';`,{ type: QueryTypes.SELECT });
             }
@@ -819,7 +873,14 @@ export default class DashboardController extends BaseController {
     protected async getmentorpercentage(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try{
             let result :any = {};
-            const {user_id} = req.query
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {user_id} = newREQQuery
             if(user_id){
                 const currentProgress = await db.query(`SELECT count(*) as course_completed_count FROM mentor_topic_progress where user_id = ${user_id};`,{ type: QueryTypes.SELECT });
                 result['currentProgress'] = Object.values(currentProgress[0]).toString()
@@ -1035,7 +1096,14 @@ export default class DashboardController extends BaseController {
     protected async getStateDashboard(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let data: any = {}
-            const state = req.query.state;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const state = newREQQuery.state;
             let wherefilter = `&& og.state= '${state}'`;
             const summary = await db.query(`SELECT 
                 org.state,

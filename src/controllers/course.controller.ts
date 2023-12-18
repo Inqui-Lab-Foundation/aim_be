@@ -38,13 +38,20 @@ export default class CourseController extends BaseController {
         try {
             let data: any;
             const { model, id } = req.params;
-            const paramStatus:any = req.query.status
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const paramStatus:any = newREQQuery.status
             if (model) {
                 this.model = model;
             };
 
             // pagination
-            const { page, size, title } = req.query;
+            const { page, size, title } = newREQQuery;
             let condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model)
@@ -122,10 +129,16 @@ export default class CourseController extends BaseController {
 
     async getDetailsData(req: Request, res: Response, modelClass: any) {
         let whereClause: any = {};
-
-        whereClause[`${this.model}_id`] = req.params.id;
-        
-        const paramStatus:any = req.query.status;
+        const newParamId = await this.authService.decryptGlobal(req.params.id);
+        whereClause[`${this.model}_id`] = newParamId;
+        let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+        const paramStatus:any = newREQQuery.status;
         let whereClauseStatusPart:any = {};
         let whereClauseStatusPartLiteral = "1=1";
         let addWhereClauseStatusPart = false

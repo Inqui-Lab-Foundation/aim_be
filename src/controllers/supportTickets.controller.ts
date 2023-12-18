@@ -37,7 +37,14 @@ export default class SupportTicketController extends BaseController {
                 this.model = model;
             };
             // pagination
-            const { page, size, status, user_id, state } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { page, size, status, user_id, state } = newREQQuery;
             let condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
             let stateFilter = state ? { state: { [Op.like]: `%${state}%` } } : null;
             let filteringBasedOnUser_id = user_id ? { created_by: user_id } : null;
@@ -47,7 +54,8 @@ export default class SupportTicketController extends BaseController {
             });
             const where: any = {};
             if (id) {
-                where[`${this.model}_id`] = req.params.id;
+                const newParamId = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = newParamId;
                 data = await this.crudService.findOne(modelClass, {
                     attributes: [
                         [
@@ -160,7 +168,8 @@ export default class SupportTicketController extends BaseController {
             const modelLoaded = await this.loadModel(model);
             let payload: any = req.body;
             payload['updated_by'] = user_id;
-            where[`${this.model}_id`] = id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const data = await this.crudService.update(modelLoaded, payload, { where: where });
             if (!data) {
                 throw badRequest()
