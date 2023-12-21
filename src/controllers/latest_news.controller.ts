@@ -2,12 +2,13 @@ import { Op } from "sequelize";
 import { latest_news } from "../models/latest_news.model";
 import BaseController from "./base.controller";
 import { Request, Response, NextFunction } from 'express';
-import { notFound } from "boom";
+import { notFound, unauthorized } from "boom";
 import dispatcher from "../utils/dispatch.util";
 import ValidationsHolder from "../validations/validationHolder";
 import {latest_newsSchema, latest_newsUpdateSchema} from '../validations/latest_news.validation';
 import { S3 } from "aws-sdk";
 import fs from 'fs';
+import { speeches } from "../configs/speeches.config";
 
 export default class LatestNewsController extends BaseController {
 
@@ -25,6 +26,9 @@ export default class LatestNewsController extends BaseController {
         super.initializeRoutes();
     }
     protected async getlist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try{
             let data: any;
             let newREQQuery : any = {}
@@ -56,6 +60,9 @@ export default class LatestNewsController extends BaseController {
         }
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try {
             const rawfiles: any = req.files;
             const files: any = Object.values(rawfiles);

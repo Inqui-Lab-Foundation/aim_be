@@ -9,7 +9,7 @@ import ValidationsHolder from "../validations/validationHolder";
 import BaseController from "./base.controller";
 import db from "../utils/dbconnection.util";
 import { support_ticket_reply } from "../models/support_ticket_reply.model";
-import { badRequest } from "boom";
+import { badRequest, unauthorized } from "boom";
 
 
 export default class SupportTicketController extends BaseController {
@@ -28,6 +28,9 @@ export default class SupportTicketController extends BaseController {
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             // console.log('came here..>! 31')
             let data: any;
@@ -158,6 +161,9 @@ export default class SupportTicketController extends BaseController {
         }
     };
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             const { model, id } = req.params;
             if (model) {

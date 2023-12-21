@@ -35,6 +35,9 @@ export default class CourseController extends BaseController {
 
 
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             let data: any;
             const { model, id } = req.params;
@@ -128,6 +131,9 @@ export default class CourseController extends BaseController {
     }
 
     async getDetailsData(req: Request, res: Response, modelClass: any) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         let whereClause: any = {};
         const newParamId = await this.authService.decryptGlobal(req.params.id);
         whereClause[`${this.model}_id`] = newParamId;

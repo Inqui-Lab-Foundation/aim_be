@@ -41,6 +41,9 @@ export default class QuizSurveyController extends BaseController {
         super.initializeRoutes();
     }
     protected async getQuizSurveyStatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try{
             const {quiz_survey_id} = req.params
 
@@ -174,6 +177,9 @@ export default class QuizSurveyController extends BaseController {
 
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try {
             let newREQQuery : any = {}
             if(req.query.Data){
@@ -359,7 +365,9 @@ export default class QuizSurveyController extends BaseController {
 
 
     protected async  getNextQuestion(req:Request,res:Response,next:NextFunction): Promise<Response | void> {
-        
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         const  quiz_survey_id  = req.params.id;
         const  paramStatus :any = req.query.status;
         const user_id =  res.locals.user_id;
@@ -474,6 +482,9 @@ export default class QuizSurveyController extends BaseController {
     }
 
     protected async submitResponseSingle(req:Request,res:Response,next:NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try{
             
             const  quiz_survey_id  = req.params.id;
@@ -497,7 +508,7 @@ export default class QuizSurveyController extends BaseController {
         }
     }
 
-    protected async insertSingleResponse(user_id:any,quiz_survey_id:any,quiz_survey_question_id:any,selected_option:any){
+    protected async insertSingleResponse(user_id:any,quiz_survey_id:any,quiz_survey_question_id:any,selected_option:any){ 
         try{
             const questionAnswered = await this.crudService.findOne(quiz_survey_question,{where: {quiz_survey_question_id:quiz_survey_question_id}});
             if(questionAnswered instanceof Error){
@@ -579,6 +590,9 @@ export default class QuizSurveyController extends BaseController {
     }
 
     protected async submitResponses(req:Request,res:Response,next:NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try{
             
             const  quiz_survey_id  = req.params.id;

@@ -8,6 +8,7 @@ import { faqCategorySchema, faqCategorySchemaUpdateSchema } from "../validations
 import ValidationsHolder from "../validations/validationHolder";
 import BaseController from "./base.controller";
 import db from "../utils/dbconnection.util"
+import { unauthorized } from "boom";
 
 export default class FaqCategoryController extends BaseController {
 
@@ -26,6 +27,9 @@ export default class FaqCategoryController extends BaseController {
     }
 
     protected getData(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
         // console.log(objWhereClauseStatusPart)
         return super.getData(req, res, next, [],

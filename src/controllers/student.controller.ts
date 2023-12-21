@@ -20,7 +20,7 @@ import StudentService from '../services/students.service';
 import { badge } from '../models/badge.model';
 import { mentor } from '../models/mentor.model';
 import { organization } from '../models/organization.model';
-import { badRequest, internal, notFound } from 'boom';
+import { badRequest, internal, notFound, unauthorized } from 'boom';
 import { find } from 'lodash';
 import { string } from 'joi';
 import db from "../utils/dbconnection.util"
@@ -56,6 +56,9 @@ export default class StudentController extends BaseController {
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             let newREQQuery : any = {}
             if(req.query.Data){
@@ -238,6 +241,9 @@ export default class StudentController extends BaseController {
         }
     }
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             const { model, id } = req.params;
             if (model) {
@@ -314,6 +320,9 @@ export default class StudentController extends BaseController {
         }
     }
     protected async deleteData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             const { model, id } = req.params;
             if (model) this.model = model;
@@ -459,6 +468,9 @@ export default class StudentController extends BaseController {
         }
     }
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
@@ -472,6 +484,9 @@ export default class StudentController extends BaseController {
         }
     }
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         // accept the user_id or user_name from the req.body and update the password in the user table
         // perviously while student registration changes we have changed the password is changed to random generated UUID and stored and send in the payload,
         // now reset password use case is to change the password using user_id to some random generated ID and update the UUID 
@@ -507,6 +522,9 @@ export default class StudentController extends BaseController {
         // }
     }
     private async addBadgeToStudent(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             //todo: test this api : haven't manually tested this api yet 
             let newREParams : any = {};
@@ -603,6 +621,9 @@ export default class StudentController extends BaseController {
         }
     }
     private async getStudentBadges(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         //todo: implement this api ...!!
         try {
             let newREParams : any = {};
@@ -672,6 +693,9 @@ export default class StudentController extends BaseController {
         }
     }
     private async studentPasswordUpdate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             let count: any = 0;
             const getStudentDetails = await this.crudService.findAll(student, {
@@ -693,6 +717,9 @@ export default class StudentController extends BaseController {
         }
     }
     private async studentCertificate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             let newREParams : any = {};
             if(req.params){
@@ -727,6 +754,9 @@ export default class StudentController extends BaseController {
         }
     }
     private async stuIdeaSubmissionEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             const { mentor_id,team_id,team_name,title} = req.body;
             let data: any = {}

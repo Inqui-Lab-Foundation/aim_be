@@ -6,7 +6,7 @@ import BaseController from "./base.controller";
 import dispatcher from '../utils/dispatch.util';
 import {faq} from '../models/faq.model';
 import { translation } from "../models/translation.model";
-import { badRequest } from 'boom';
+import { badRequest, unauthorized } from 'boom';
 import { speeches } from '../configs/speeches.config';
 
 export default class FaqController extends BaseController {
@@ -28,7 +28,10 @@ export default class FaqController extends BaseController {
         super.initializeRoutes();
         
     }
-    protected async getbyCategoryid(req: Request, res: Response, next: NextFunction) {  
+    protected async getbyCategoryid(req: Request, res: Response, next: NextFunction) { 
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try{
             const newParamId = await this.authService.decryptGlobal(req.params.id);
             const id = newParamId;
@@ -48,6 +51,9 @@ export default class FaqController extends BaseController {
     }
    
     protected async addfaq(req: Request, res: Response, next: NextFunction) {  
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             let result :any = {};
             if (!req.body.faq_category_id) throw badRequest(speeches.FAQ_CATEGORY);
@@ -123,6 +129,9 @@ export default class FaqController extends BaseController {
         } 
     }
     protected async editfaq(req: Request, res: Response, next: NextFunction) {  
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             let result :any = {};
             let newREQQuery : any = {}
@@ -203,6 +212,9 @@ export default class FaqController extends BaseController {
         } 
     }
     protected async deletefaq(req: Request, res: Response, next: NextFunction) {  
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             let result :any = {};
             let newREQQuery : any = {}
@@ -277,6 +289,9 @@ export default class FaqController extends BaseController {
     }
 
     protected getData(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         return super.getData(req,res,next,[],
                     {exclude:constents.SEQUELIZE_FLAGS.DEFAULT_EXCLUDE_SCOPE})
     }

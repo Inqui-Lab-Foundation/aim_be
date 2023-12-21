@@ -1,4 +1,4 @@
-import { badRequest } from "boom";
+import { badRequest, unauthorized } from "boom";
 import { Request,Response,NextFunction } from "express";
 import { constents } from "../configs/constents.config";
 import TranslationService from "../services/translation.service";
@@ -9,6 +9,7 @@ import { courseModuleSchema, courseModuleUpdateSchema } from "../validations/cou
 import { translationSchema, translationUpdateSchema } from "../validations/translation.validations";
 import ValidationsHolder from "../validations/validationHolder";
 import BaseController from "./base.controller";
+import { speeches } from "../configs/speeches.config";
 
 export default class TranslationController extends BaseController {
 
@@ -28,6 +29,9 @@ export default class TranslationController extends BaseController {
         super.initializeRoutes();
     }
     protected async getTrasnlationKey(req:Request,res:Response,next:NextFunction){
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             let newREQQuery : any = {}
             if(req.query.Data){
@@ -49,6 +53,9 @@ export default class TranslationController extends BaseController {
         }
     }
     protected async refreshTranslation(req:Request,res:Response,next:NextFunction){
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             const service = new TranslationService();
             await service.refreshDataFromDb();
@@ -60,6 +67,9 @@ export default class TranslationController extends BaseController {
 
     protected async translationRefresh(req:Request,res:Response,next:NextFunction)
     {
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         console.log("Req ",req)
         let translateTable = req.body?.translateTable ? req.body?.translateTable : '*';
         

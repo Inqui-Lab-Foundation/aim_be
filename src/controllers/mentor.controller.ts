@@ -14,7 +14,7 @@ import dispatcher from '../utils/dispatch.util';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
 import ValidationsHolder from '../validations/validationHolder';
-import { badRequest, forbidden, internal, notFound } from 'boom';
+import { badRequest, forbidden, internal, notFound, unauthorized } from 'boom';
 import { mentor } from '../models/mentor.model';
 import { where } from 'sequelize/types';
 import { mentor_topic_progress } from '../models/mentor_topic_progress.model';
@@ -155,6 +155,9 @@ export default class MentorController extends BaseController {
 
     //TODO: Override the getDate function for mentor and join org details and user details
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try {
             let data: any;
             const { model, id } = req.params;
@@ -307,6 +310,9 @@ export default class MentorController extends BaseController {
         }
     }
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try {
             const { model, id } = req.params;
             if (model) {
@@ -430,6 +436,9 @@ export default class MentorController extends BaseController {
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
@@ -445,6 +454,9 @@ export default class MentorController extends BaseController {
 
     //TODO: Update flag reg_status on successful changed password
     private async updatePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         const result = await this.authService.updatePassword(req.body, res);
         if (!result) {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
@@ -497,6 +509,9 @@ export default class MentorController extends BaseController {
     }
     //TODO: test this api and debug and fix any issues in testing if u see any ...!!
     private async deleteAllData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try {
             let newREParams : any = {};
             if(req.params){
@@ -623,6 +638,9 @@ export default class MentorController extends BaseController {
         }
     }
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try {
             const { email, username, otp } = req.body;
             let otpCheck = typeof otp == 'boolean' && otp == false ? otp : true;
@@ -648,6 +666,9 @@ export default class MentorController extends BaseController {
         }
     }
     private async manualResetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         // accept the user_id or user_name from the req.body and update the password in the user table
         // perviously while student registration changes we have changed the password is changed to random generated UUID and stored and send in the payload,
         // now reset password use case is to change the password using user_id to some random generated ID and update the UUID also
@@ -748,6 +769,9 @@ export default class MentorController extends BaseController {
         });
     }
     protected async mentorpdfdata(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try {
             let data: any ={};
             const { model} = req.params;
@@ -825,6 +849,9 @@ export default class MentorController extends BaseController {
         }
     }
     protected async triggerWelcomeEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try {
             const result = await this.authService.triggerWelcome(req.body);
             return res.status(200).send(dispatcher(res, result, 'success'));

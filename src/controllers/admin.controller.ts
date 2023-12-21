@@ -8,7 +8,7 @@ import ValidationsHolder from '../validations/validationHolder';
 import { user } from '../models/user.model';
 import { admin } from '../models/admin.model';
 import { adminSchema, adminUpdateSchema } from '../validations/admins.validationa';
-import { badRequest, notFound } from 'boom';
+import { badRequest, notFound, unauthorized } from 'boom';
 import db from "../utils/dbconnection.util"
 import { QueryTypes } from 'sequelize';
 
@@ -36,6 +36,9 @@ export default class AdminController extends BaseController {
         super.initializeRoutes();
     }
     protected getData(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         return super.getData(req, res, next, [],
             [
                 "admin_id",
@@ -56,6 +59,9 @@ export default class AdminController extends BaseController {
     }
 
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             const { model, id } = req.params;
             if (model) {
@@ -137,6 +143,9 @@ export default class AdminController extends BaseController {
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
@@ -163,6 +172,9 @@ export default class AdminController extends BaseController {
     //     }
     // }
     private async IdeaInDraftEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             const { date } = req.body;
             let data: any = {}
@@ -212,6 +224,9 @@ export default class AdminController extends BaseController {
         }
     }
     private async IdeaNotInitiatedEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             const { date } = req.body;
             let data: any = {}

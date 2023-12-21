@@ -45,6 +45,9 @@ export default class QuizController extends BaseController {
      * @param next 
      */
     protected async getNextQuestion(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try{
             let newREQQuery : any = {}
             if(req.query.Data){
@@ -203,6 +206,9 @@ export default class QuizController extends BaseController {
     }
 
     protected async submitResponse(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try {
             const newParamId = await this.authService.decryptGlobal(req.params.id);
             const quiz_id = newParamId;
@@ -363,6 +369,9 @@ export default class QuizController extends BaseController {
     //TODO: 
 
     protected async getResult(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try{
             let newREQQuery : any = {}
             if(req.query.Data){

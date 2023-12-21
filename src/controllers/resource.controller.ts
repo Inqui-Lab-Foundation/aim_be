@@ -2,12 +2,13 @@ import { Op } from "sequelize";
 import { resource } from "../models/resource.model";
 import BaseController from "./base.controller";
 import { Request, Response, NextFunction } from 'express';
-import { notFound } from "boom";
+import { notFound, unauthorized } from "boom";
 import dispatcher from "../utils/dispatch.util";
 import ValidationsHolder from "../validations/validationHolder";
 import {resourceSchema, resourceUpdateSchema} from '../validations/resource.validations';
 import { S3 } from "aws-sdk";
 import fs from 'fs';
+import { speeches } from "../configs/speeches.config";
 
 export default class ResourceController extends BaseController {
 
@@ -25,6 +26,9 @@ export default class ResourceController extends BaseController {
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             let data:any
             data=await this.crudService.findAll(resource,{
@@ -44,6 +48,9 @@ export default class ResourceController extends BaseController {
         }
     }
     protected async getMentorResources(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             let data: any;
             let newREQQuery : any = {}
@@ -76,6 +83,9 @@ export default class ResourceController extends BaseController {
         }
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             const rawfiles: any = req.files;
             const files: any = Object.values(rawfiles);

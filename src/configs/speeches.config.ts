@@ -10,7 +10,7 @@ export const speeches = {
     USER_OLDPASSWORD_REQUIRED: "Old Password cant not be null/empty",
     USER_NEWPASSWORD_REQUIRED: "New Password cant not be null/empty",
     USER_ORGANIZATION_CODE_REQUIRED: "New Password cant not be null/empty",
-
+    ROLE_ACCES_DECLINE:"Unauthorized Access! This user is Unauthorized",
     WELCOME_MESSAGE: "Welcome to the Unisolve APIs",
     UNABLE_TO_CREATE_TOKEN: "Unable to create token",
     INVALID_DATA_SEND_TO_CREATE_TOKEN: "Invalid data send to create token",

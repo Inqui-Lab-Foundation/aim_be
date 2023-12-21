@@ -99,6 +99,7 @@ export default class CRUDController implements IController {
             }else{
                 newREQQuery = req.query;
             }
+            console.log(newREQQuery,"newREQQuery",req.query);
             let data: any;
             const { model, id } = req.params;
             const paramStatus: any = newREQQuery.status;
@@ -106,7 +107,7 @@ export default class CRUDController implements IController {
                 this.model = model;
             };
             // pagination
-            const { page, size, status } = newREQQuery;
+            const { page, size } = newREQQuery;
             // let condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error => {
@@ -116,8 +117,9 @@ export default class CRUDController implements IController {
             let objwhereClauseStatusPart = this.getWhereClauseStatsPart(newREQQuery);
 
             if (id) {
-                const newParamId = await this.authService.decryptGlobal(req.params.id);
-                where[`${this.model}_id`] = newParamId;
+                const newParamId : any = await this.authService.decryptGlobal(req.params.id);
+                console.log(newParamId,"klk");
+                where[`${this.model}_id`] = JSON.parse(newParamId);
                 data = await this.crudService.findOne(modelClass, {
                     attributes:findQueryAttrs,
                     where: {
@@ -489,7 +491,7 @@ export default class CRUDController implements IController {
     }
 
     protected getWhereClauseStatsPart(req:Request):any{
-        const paramStatus:any = req.query.status
+        const paramStatus:any = req.query?.status ? req.query.status : false
         let whereClauseStatusPart:any = {};
         let whereClauseStatusPartLiteral = "1=1";
         let addWhereClauseStatusPart = false

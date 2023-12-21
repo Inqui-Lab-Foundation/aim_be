@@ -7,7 +7,7 @@ import BaseController from "./base.controller";
 import authService from '../services/auth.service';
 import db from "../utils/dbconnection.util"
 import dispatcher from "../utils/dispatch.util";
-import { badRequest, forbidden, notFound } from "boom";
+import { badRequest, forbidden, notFound, unauthorized } from "boom";
 import { speeches } from "../configs/speeches.config";
 import { team } from "../models/team.model";
 import { student } from "../models/student.model";
@@ -35,6 +35,9 @@ export default class TeamController extends BaseController {
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             let data: any;
             const { model, id } = req.params;
@@ -232,6 +235,9 @@ export default class TeamController extends BaseController {
         }
     };
     protected async getTeamMembers(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         // accept the team_id from the params and find the students details, user_id
         const newParamId = await this.authService.decryptGlobal(req.params.id);
         const team_id = newParamId;
@@ -282,6 +288,9 @@ export default class TeamController extends BaseController {
      * @returns 
      */
     protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             const { model } = req.params;
             if (model) {
@@ -333,6 +342,9 @@ export default class TeamController extends BaseController {
         }
     }
     protected async deleteData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try {
             let deletingTeamDetails: any;
             let deletingChallengeDetails: any;
@@ -387,6 +399,9 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getTeamsByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             let newREQQuery : any = {}
             if(req.query.Data){
@@ -403,6 +418,9 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getNameByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             let newREQQuery : any = {}
             if(req.query.Data){
@@ -419,6 +437,9 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getteamslistwithideastatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             let newREQQuery : any = {}
             if(req.query.Data){
@@ -444,6 +465,9 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getTeamMentor(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         try{
             let newREQQuery : any = {}
             if(req.query.Data){

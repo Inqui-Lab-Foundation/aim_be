@@ -5,6 +5,8 @@ import { S3 } from "aws-sdk";
 import fs from 'fs';
 import { Request, Response, NextFunction } from 'express';
 import dispatcher from "../utils/dispatch.util";
+import { unauthorized } from "boom";
+import { speeches } from "../configs/speeches.config";
 
 export default class popupController extends BaseController {
 
@@ -21,6 +23,9 @@ export default class popupController extends BaseController {
         super.initializeRoutes();
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         try {
             const rawfiles: any = req.files;
             const files: any = Object.values(rawfiles);
