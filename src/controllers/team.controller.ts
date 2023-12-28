@@ -7,7 +7,7 @@ import BaseController from "./base.controller";
 import authService from '../services/auth.service';
 import db from "../utils/dbconnection.util"
 import dispatcher from "../utils/dispatch.util";
-import { badRequest, forbidden, notFound, unauthorized } from "boom";
+import { badRequest, forbidden, notFound } from "boom";
 import { speeches } from "../configs/speeches.config";
 import { team } from "../models/team.model";
 import { student } from "../models/student.model";
@@ -35,8 +35,8 @@ export default class TeamController extends BaseController {
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any;
@@ -162,8 +162,8 @@ export default class TeamController extends BaseController {
                 ]
             }
             if (id) {
-                const newParamId = await this.authService.decryptGlobal(req.params.id);
-                where[`${this.model}_id`] = newParamId;
+                const newParamId :any = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = JSON.parse(newParamId);
                 data = await this.crudService.findOne(modelClass, {
                     attributes: [
                         'team_name',
@@ -236,11 +236,11 @@ export default class TeamController extends BaseController {
     };
     protected async getTeamMembers(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         // accept the team_id from the params and find the students details, user_id
-        const newParamId = await this.authService.decryptGlobal(req.params.id);
-        const team_id = newParamId;
+        const newParamId: any = await this.authService.decryptGlobal(req.params.id);
+        const team_id = JSON.parse(newParamId);
         if (!team_id || team_id === "") {
             return res.status(400).send(dispatcher(res, null, 'error', speeches.TEAM_NAME_ID));
         }
@@ -289,7 +289,7 @@ export default class TeamController extends BaseController {
      */
     protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { model } = req.params;
@@ -343,7 +343,7 @@ export default class TeamController extends BaseController {
     }
     protected async deleteData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let deletingTeamDetails: any;
@@ -400,7 +400,7 @@ export default class TeamController extends BaseController {
     }
     protected async getTeamsByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let newREQQuery : any = {}
@@ -418,8 +418,8 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getNameByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let newREQQuery : any = {}
@@ -438,7 +438,7 @@ export default class TeamController extends BaseController {
     }
     protected async getteamslistwithideastatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let newREQQuery : any = {}
@@ -465,8 +465,8 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getTeamMentor(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let newREQQuery : any = {}

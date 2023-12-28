@@ -30,7 +30,7 @@ export default class BadgeController extends BaseController {
     }
 
     protected getData(req: Request, res: Response, next: NextFunction) {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT'){
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
         return super.getData(req,res,next,[],

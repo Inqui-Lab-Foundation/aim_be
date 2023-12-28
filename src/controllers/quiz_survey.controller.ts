@@ -42,7 +42,7 @@ export default class QuizSurveyController extends BaseController {
     }
     protected async getQuizSurveyStatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try{
             const {quiz_survey_id} = req.params
@@ -178,7 +178,7 @@ export default class QuizSurveyController extends BaseController {
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try {
             let newREQQuery : any = {}
@@ -233,8 +233,8 @@ export default class QuizSurveyController extends BaseController {
                 addWhereClauseStatusPart = true;
             }
             if (id) {
-                const newParamId = await this.authService.decryptGlobal(req.params.id);
-                where[`${this.model}_id`] = newParamId;
+                const newParamId : any = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = JSON.parse(newParamId);
                 data = await this.crudService.findOne(modelClass, {
                     attributes:[
                         "quiz_survey_id",
@@ -366,7 +366,7 @@ export default class QuizSurveyController extends BaseController {
 
     protected async  getNextQuestion(req:Request,res:Response,next:NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         const  quiz_survey_id  = req.params.id;
         const  paramStatus :any = req.query.status;
@@ -483,7 +483,7 @@ export default class QuizSurveyController extends BaseController {
 
     protected async submitResponseSingle(req:Request,res:Response,next:NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try{
             
@@ -591,11 +591,11 @@ export default class QuizSurveyController extends BaseController {
 
     protected async submitResponses(req:Request,res:Response,next:NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try{
             
-            const  quiz_survey_id  = req.params.id;
+            const  quiz_survey_id  = await this.authService.decryptGlobal(req.params.id);
             const {responses} = req.body;
             const user_id =  res.locals.user_id;
             if(!quiz_survey_id){

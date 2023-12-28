@@ -522,7 +522,7 @@ export default class authService {
 
                 result['data'] = {
                     id: user_res.dataValues.state_coordinators_id,
-                    role:'STATE',
+                    role:user_res.dataValues.role,
                     username: user_res.dataValues.username,
                     state_name: user_res.dataValues.state_name,
                     status: user_res.dataValues.status,

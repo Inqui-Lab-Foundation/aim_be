@@ -1,4 +1,4 @@
-import { badRequest, unauthorized } from "boom";
+import { badRequest } from "boom";
 import { Request,Response,NextFunction } from "express";
 import { constents } from "../configs/constents.config";
 import TranslationService from "../services/translation.service";
@@ -30,7 +30,7 @@ export default class TranslationController extends BaseController {
     }
     protected async getTrasnlationKey(req:Request,res:Response,next:NextFunction){
         if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let newREQQuery : any = {}
@@ -54,7 +54,7 @@ export default class TranslationController extends BaseController {
     }
     protected async refreshTranslation(req:Request,res:Response,next:NextFunction){
         if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             const service = new TranslationService();
@@ -68,9 +68,8 @@ export default class TranslationController extends BaseController {
     protected async translationRefresh(req:Request,res:Response,next:NextFunction)
     {
         if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
-        console.log("Req ",req)
         let translateTable = req.body?.translateTable ? req.body?.translateTable : '*';
         
         try{

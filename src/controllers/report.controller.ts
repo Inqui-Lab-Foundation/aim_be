@@ -11,7 +11,7 @@ import { quiz_survey_response } from '../models/quiz_survey_response.model';
 import BaseController from "./base.controller";
 import { constents } from "../configs/constents.config";
 import { mentor_course_topic } from "../models/mentor_course_topic.model";
-import { internal, notFound, unauthorized } from "boom";
+import { internal, notFound } from "boom";
 import { speeches } from "../configs/speeches.config";
 import ReportService from "../services/report.service";
 import { Op, QueryTypes } from 'sequelize';
@@ -75,8 +75,8 @@ export default class ReportController extends BaseController {
     }
 
     protected async getMentorRegList(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try {
             const { quiz_survey_id } = req.params
@@ -179,7 +179,7 @@ export default class ReportController extends BaseController {
 
     protected async mentorPreSurvey(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { quiz_survey_id } = req.params
@@ -260,7 +260,7 @@ export default class ReportController extends BaseController {
 
     protected async mentorPostSurvey(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { quiz_survey_id } = req.params
@@ -342,7 +342,7 @@ export default class ReportController extends BaseController {
 
     protected async courseComplete(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { quiz_survey_id } = req.params
@@ -391,7 +391,7 @@ export default class ReportController extends BaseController {
     }
     protected async courseInComplete(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { quiz_survey_id } = req.params
@@ -418,7 +418,6 @@ export default class ReportController extends BaseController {
                 addWhereClauseStatusPart = true;
             }
             const mentorsResult = await db.query("SELECT mentors.organization_code, mentors.district, mentors.full_name,(SELECT COUNT(mentor_topic_progress_id)FROM mentor_topic_progress AS mentor_progress WHERE mentor_progress.user_id=mentors.user_id) AS 'count' FROM mentors LEFT OUTER JOIN mentor_topic_progress AS mentor_progress ON mentors.user_id=mentor_progress.user_id where (SELECT COUNT(mentor_topic_progress_id)FROM mentor_topic_progress AS mentor_progress WHERE mentor_progress.user_id=mentors.user_id) != 9 GROUP BY mentor_progress.user_id", { type: QueryTypes.SELECT });
-            console.log(mentorsResult);
             if (!mentorsResult) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
@@ -431,8 +430,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async notRegistered(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { quiz_survey_id } = req.params
@@ -512,7 +511,7 @@ export default class ReportController extends BaseController {
     }
     protected async userTopicProgressGroupByCourseTopicId(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const mentorsResult = await db.query("SELECT course_topic_id, count(user_id) as count FROM user_topic_progress group by course_topic_id", { type: QueryTypes.SELECT });
@@ -529,7 +528,7 @@ export default class ReportController extends BaseController {
     }
     protected async teamRegistered(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { quiz_survey_id } = req.params
@@ -618,7 +617,7 @@ export default class ReportController extends BaseController {
     }
     protected async challengesLevelCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { quiz_survey_id } = req.params
@@ -665,7 +664,7 @@ export default class ReportController extends BaseController {
     }
     protected async districtWiseChallengesCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let challenges: any
@@ -714,7 +713,7 @@ export default class ReportController extends BaseController {
     }
     protected async getAllMentorReports(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -900,7 +899,7 @@ export default class ReportController extends BaseController {
     }
     protected async mentorRegNONregCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -928,7 +927,7 @@ export default class ReportController extends BaseController {
     }
     protected async mentorstudentSurveyCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -956,7 +955,7 @@ export default class ReportController extends BaseController {
 
     protected async mentordeatilscsv(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -1026,8 +1025,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async mentorsummary(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -1187,7 +1186,7 @@ export default class ReportController extends BaseController {
     }
     protected async getmentorSurvey(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -1229,7 +1228,7 @@ export default class ReportController extends BaseController {
     }
     protected async getstudentSurvey(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -1272,8 +1271,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getstudentDetailsreport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -1353,8 +1352,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getmentorDetailsreport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -1432,8 +1431,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getmentorDetailstable(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -1535,8 +1534,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getstudentDetailstable(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -1657,7 +1656,7 @@ export default class ReportController extends BaseController {
     }
     private async refreshSchoolDReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const service = new SchoolDReportService()
@@ -1670,7 +1669,7 @@ export default class ReportController extends BaseController {
     }
     private async refreshStudentDReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const service = new StudentDReportService()
@@ -1682,8 +1681,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getstudentATLnonATLcount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -1736,7 +1735,7 @@ export default class ReportController extends BaseController {
     }
     protected async getideaReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -1814,8 +1813,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL1Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -1897,8 +1896,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL2Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -1998,8 +1997,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL3Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -2100,7 +2099,7 @@ export default class ReportController extends BaseController {
     }
     protected async getideaReportTable(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -2188,8 +2187,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL1ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -2242,8 +2241,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL1ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -2277,8 +2276,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL2ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -2304,8 +2303,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL2ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -2329,8 +2328,8 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL3ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}
@@ -2360,8 +2359,8 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
         }
     }
     protected async getL3ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}

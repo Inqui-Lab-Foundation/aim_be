@@ -36,7 +36,7 @@ export default class AdminController extends BaseController {
         super.initializeRoutes();
     }
     protected getData(req: Request, res: Response, next: NextFunction) {
-        if(res.locals.role !== 'ADMIN'){
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
         return super.getData(req, res, next, [],
@@ -60,7 +60,7 @@ export default class AdminController extends BaseController {
 
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { model, id } = req.params;
@@ -143,8 +143,8 @@ export default class AdminController extends BaseController {
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {
@@ -173,7 +173,7 @@ export default class AdminController extends BaseController {
     // }
     private async IdeaInDraftEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { date } = req.body;
@@ -225,7 +225,7 @@ export default class AdminController extends BaseController {
     }
     private async IdeaNotInitiatedEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { date } = req.body;

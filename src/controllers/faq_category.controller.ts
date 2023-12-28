@@ -27,7 +27,7 @@ export default class FaqCategoryController extends BaseController {
     }
 
     protected getData(req: Request, res: Response, next: NextFunction) {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT'){
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
         let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);

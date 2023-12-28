@@ -34,7 +34,7 @@ export const translationMiddleware = (req:Request,res:Response,next:NextFunction
     else{
         newREQQuery = req.query;
     }
-    locale = newREQQuery;
+    locale = newREQQuery.locale;
     const trasnlationService = new TranslationService()
     if(!locale || !trasnlationService.getSupportedLocales().includes(locale)){
         locale  = constents.translations_flags.default_locale

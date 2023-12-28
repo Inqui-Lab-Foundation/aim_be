@@ -25,7 +25,7 @@ export default class UserTopicProgress extends BaseController {
 
     protected async createData(req: Request, res: Response, next: NextFunction) : Promise<Response | void>{
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { model } = req.params;

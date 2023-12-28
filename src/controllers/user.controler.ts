@@ -5,7 +5,6 @@ import dispatcher from '../utils/dispatch.util';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
 import ValidationsHolder from '../validations/validationHolder';
-import { badRequest, unauthorized } from 'boom';
 import validationMiddleware from '../middlewares/validation.middleware';
 import { UpdateMentorUsernameSchema } from '../validations/user.validations'
 
@@ -26,7 +25,7 @@ export default class UserController extends BaseController {
 
     private async updateMentorUserDetails(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const result = await this.authService.updateUserMentorDetails(req.body);

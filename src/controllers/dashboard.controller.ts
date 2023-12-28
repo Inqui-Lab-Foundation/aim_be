@@ -15,7 +15,7 @@ import { organization } from '../models/organization.model';
 import { constents } from '../configs/constents.config';
 import path from 'path';
 import { readFileSync } from 'fs';
-import { badData, internal, notFound, unauthorized } from 'boom';
+import { badData, internal, notFound } from 'boom';
 import { student } from '../models/student.model';
 import { team } from '../models/team.model';
 import { challenge_response } from '../models/challenge_response.model';
@@ -89,7 +89,7 @@ export default class DashboardController extends BaseController {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     private async getMentorStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREParams : any = {};
@@ -216,7 +216,6 @@ export default class DashboardController extends BaseController {
                    throw internal(speeches.ROADMAP_FILE_CORRUPTED)
                }
             }*/
-            console.log(file.teacher);
             const teacherStepsTotal = Object.keys(file.teacher);
             const totalNoOfSteps = teacherStepsTotal.length;
             let totalNoOfCompletedSteps = 0;
@@ -257,14 +256,11 @@ export default class DashboardController extends BaseController {
     ///////// PS: this assumes that there is only course in the systems and hence alll topics inside topics table are taken for over counts
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     private async getStudentStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
-            let newREParams : any = {};
-            const newParams : any = await this.authService.decryptGlobal(req.params);
-            newREParams = JSON.parse(newParams);
-            const { student_user_id } = newREParams;
+            const student_user_id : any = await this.authService.decryptGlobal(req.params.student_user_id);
             let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
             const newREQQuery  = JSON.parse(newQuery);
             const paramStatus: any = newREQQuery.status;
@@ -388,8 +384,8 @@ export default class DashboardController extends BaseController {
     ///////// PS: this assumes that there is only course in the systems and hence alll topics inside topics table are taken for over counts
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     private async getTeamStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT'  && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const newParams : any = await this.authService.decryptGlobal(req.params.team_id);
@@ -529,7 +525,7 @@ export default class DashboardController extends BaseController {
 
     private async getStudentChallengeDetails(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREParams : any = {};
@@ -599,14 +595,11 @@ export default class DashboardController extends BaseController {
         }
     }
     private async getTeamProgress(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
-            let newREParams : any = {};
-            const newParams : any = await this.authService.decryptGlobal(req.params);
-            newREParams = JSON.parse(newParams);
-            const { student_user_id } = newREParams;
+            const student_user_id  : any = await this.authService.decryptGlobal(req.params.student_user_id);
             let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
             const newREQQuery  = JSON.parse(newQuery);
             const paramStatus: any = newREQQuery.status;
@@ -683,7 +676,7 @@ export default class DashboardController extends BaseController {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     protected async getEvaluatorStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let response: any = {};
@@ -782,8 +775,8 @@ export default class DashboardController extends BaseController {
         }
     }
     protected async getUserQuizScores(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -810,7 +803,7 @@ export default class DashboardController extends BaseController {
     }
     protected async getteamCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -845,7 +838,7 @@ export default class DashboardController extends BaseController {
     }
     protected async getstudentCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -882,7 +875,7 @@ export default class DashboardController extends BaseController {
     }
     protected async getideaCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -905,7 +898,7 @@ export default class DashboardController extends BaseController {
     }
     protected async getmentorpercentage(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -931,7 +924,7 @@ export default class DashboardController extends BaseController {
 
     protected async getstudentCourseCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -978,7 +971,7 @@ export default class DashboardController extends BaseController {
     }
     protected async getideasCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -1022,7 +1015,7 @@ export default class DashboardController extends BaseController {
     
     protected async getmentorCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -1050,7 +1043,7 @@ export default class DashboardController extends BaseController {
     }
     protected async getstudentCountbygender(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -1082,7 +1075,7 @@ export default class DashboardController extends BaseController {
     }
     protected async getSchoolCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -1095,7 +1088,7 @@ export default class DashboardController extends BaseController {
     }
     protected async getmentorCourseCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -1122,7 +1115,7 @@ export default class DashboardController extends BaseController {
     }
     protected async getATLNonATLRegCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let result :any = {};
@@ -1151,8 +1144,8 @@ export default class DashboardController extends BaseController {
         }
     }
     protected async getStateDashboard(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN'  && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any = {}

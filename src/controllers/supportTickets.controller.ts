@@ -9,7 +9,7 @@ import ValidationsHolder from "../validations/validationHolder";
 import BaseController from "./base.controller";
 import db from "../utils/dbconnection.util";
 import { support_ticket_reply } from "../models/support_ticket_reply.model";
-import { badRequest, unauthorized } from "boom";
+import { badRequest } from "boom";
 
 
 export default class SupportTicketController extends BaseController {
@@ -28,8 +28,8 @@ export default class SupportTicketController extends BaseController {
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             // console.log('came here..>! 31')
@@ -161,8 +161,8 @@ export default class SupportTicketController extends BaseController {
         }
     };
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { model, id } = req.params;

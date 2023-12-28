@@ -14,7 +14,7 @@ import dispatcher from '../utils/dispatch.util';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
 import ValidationsHolder from '../validations/validationHolder';
-import { badRequest, forbidden, internal, notFound, unauthorized } from 'boom';
+import { badRequest, forbidden, internal, notFound } from 'boom';
 import { mentor } from '../models/mentor.model';
 import { where } from 'sequelize/types';
 import { mentor_topic_progress } from '../models/mentor_topic_progress.model';
@@ -24,7 +24,6 @@ import { team } from '../models/team.model';
 import { student } from '../models/student.model';
 import { constents } from '../configs/constents.config';
 import { organization } from '../models/organization.model';
-import CryptoJS from 'crypto-js';
 
 export default class MentorController extends BaseController {
     model = "mentor";
@@ -155,8 +154,8 @@ export default class MentorController extends BaseController {
 
     //TODO: Override the getDate function for mentor and join org details and user details
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try {
             let data: any;
@@ -209,8 +208,8 @@ export default class MentorController extends BaseController {
                 { state: { [Op.like]: newREQQuery.state } } :
                 { state: { [Op.like]: `%%` } }
             if (id) {
-                const deValue = await this.authService.decryptGlobal(req.params.id);
-                where[`${this.model}_id`] = deValue;
+                const deValue : any = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = JSON.parse(deValue);
                 data = await this.crudService.findOne(modelClass, {
                     attributes: {
                         include: [
@@ -310,8 +309,8 @@ export default class MentorController extends BaseController {
         }
     }
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try {
             const { model, id } = req.params;
@@ -437,7 +436,7 @@ export default class MentorController extends BaseController {
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {
@@ -455,7 +454,7 @@ export default class MentorController extends BaseController {
     //TODO: Update flag reg_status on successful changed password
     private async updatePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         const result = await this.authService.updatePassword(req.body, res);
         if (!result) {
@@ -510,7 +509,7 @@ export default class MentorController extends BaseController {
     //TODO: test this api and debug and fix any issues in testing if u see any ...!!
     private async deleteAllData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try {
             let newREParams : any = {};
@@ -638,9 +637,6 @@ export default class MentorController extends BaseController {
         }
     }
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
-        } 
         try {
             const { email, username, otp } = req.body;
             let otpCheck = typeof otp == 'boolean' && otp == false ? otp : true;
@@ -667,7 +663,7 @@ export default class MentorController extends BaseController {
     }
     private async manualResetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         // accept the user_id or user_name from the req.body and update the password in the user table
         // perviously while student registration changes we have changed the password is changed to random generated UUID and stored and send in the payload,
@@ -769,8 +765,8 @@ export default class MentorController extends BaseController {
         });
     }
     protected async mentorpdfdata(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'&& res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try {
             let data: any ={};
@@ -849,9 +845,6 @@ export default class MentorController extends BaseController {
         }
     }
     protected async triggerWelcomeEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
-        } 
         try {
             const result = await this.authService.triggerWelcome(req.body);
             return res.status(200).send(dispatcher(res, result, 'success'));

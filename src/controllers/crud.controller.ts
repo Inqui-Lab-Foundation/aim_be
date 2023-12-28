@@ -99,7 +99,6 @@ export default class CRUDController implements IController {
             }else{
                 newREQQuery = req.query;
             }
-            console.log(newREQQuery,"newREQQuery",req.query);
             let data: any;
             const { model, id } = req.params;
             const paramStatus: any = newREQQuery.status;
@@ -118,7 +117,7 @@ export default class CRUDController implements IController {
 
             if (id) {
                 const newParamId : any = await this.authService.decryptGlobal(req.params.id);
-                console.log(newParamId,"klk");
+                
                 where[`${this.model}_id`] = JSON.parse(newParamId);
                 data = await this.crudService.findOne(modelClass, {
                     attributes:findQueryAttrs,
@@ -367,17 +366,12 @@ export default class CRUDController implements IController {
                 this.model = model;
             };
             const user_id = res.locals.user_id
-            console.log(user_id);
-
             const where: any = {};
             const newParamId = await this.authService.decryptGlobal(req.params.id);
             where[`${this.model}_id`] = newParamId;
             const rawFiles: any = req.files;
             const files: any = Object.values(rawFiles);
             const file_key: any = Object.keys(rawFiles);
-            console.log(rawFiles);
-            console.log(files);
-            console.log(file_key);
             const reqData: any = req.body;
             const errs: any = [];
             for (const file_name of Object.keys(files)) {

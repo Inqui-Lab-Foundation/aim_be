@@ -37,7 +37,7 @@ export default class EvaluatorController extends BaseController {
     };
 
     protected getData(req: Request, res: Response, next: NextFunction) {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR'){
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR'){
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
         return super.getData(req, res, next, [],
@@ -54,8 +54,8 @@ export default class EvaluatorController extends BaseController {
     }
 
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { model, id } = req.params;
@@ -126,7 +126,7 @@ export default class EvaluatorController extends BaseController {
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EVALUATOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {

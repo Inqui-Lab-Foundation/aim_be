@@ -1,4 +1,4 @@
-import { badRequest, internal, notFound, unauthorized } from "boom";
+import { badRequest, internal, notFound } from "boom";
 import * as csv from "fast-csv";
 import { NextFunction, Request, Response } from "express";
 import fs, { stat } from 'fs';
@@ -86,7 +86,7 @@ export default class OrganizationController extends BaseController {
 
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try {
             let data: any;

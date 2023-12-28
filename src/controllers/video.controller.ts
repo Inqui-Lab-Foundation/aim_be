@@ -32,7 +32,7 @@ export default class VideoController extends BaseController {
 
     protected async getData(req:Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         // super.getData(req,res,next)
         try {

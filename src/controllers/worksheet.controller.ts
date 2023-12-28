@@ -33,7 +33,7 @@ export default class WorksheetController extends BaseController {
 
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let data: any;
@@ -181,7 +181,7 @@ export default class WorksheetController extends BaseController {
 
     protected async submitResponse(req:Request,res:Response,next:NextFunction){
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             const newParamId = await this.authService.decryptGlobal(req.params.id);

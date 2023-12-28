@@ -2,7 +2,7 @@ import { Op } from "sequelize";
 import { latest_news } from "../models/latest_news.model";
 import BaseController from "./base.controller";
 import { Request, Response, NextFunction } from 'express';
-import { notFound, unauthorized } from "boom";
+import { notFound } from "boom";
 import dispatcher from "../utils/dispatch.util";
 import ValidationsHolder from "../validations/validationHolder";
 import {latest_newsSchema, latest_newsUpdateSchema} from '../validations/latest_news.validation';
@@ -26,8 +26,8 @@ export default class LatestNewsController extends BaseController {
         super.initializeRoutes();
     }
     protected async getlist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try{
             let data: any;
@@ -61,7 +61,7 @@ export default class LatestNewsController extends BaseController {
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try {
             const rawfiles: any = req.files;

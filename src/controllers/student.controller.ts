@@ -20,7 +20,7 @@ import StudentService from '../services/students.service';
 import { badge } from '../models/badge.model';
 import { mentor } from '../models/mentor.model';
 import { organization } from '../models/organization.model';
-import { badRequest, internal, notFound, unauthorized } from 'boom';
+import { badRequest, internal, notFound } from 'boom';
 import { find } from 'lodash';
 import { string } from 'joi';
 import db from "../utils/dbconnection.util"
@@ -56,8 +56,8 @@ export default class StudentController extends BaseController {
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -241,8 +241,8 @@ export default class StudentController extends BaseController {
         }
     }
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { model, id } = req.params;
@@ -250,10 +250,11 @@ export default class StudentController extends BaseController {
                 this.model = model;
             };
             const user_id = res.locals.user_id
+            const newParamId :any = await this.authService.decryptGlobal(req.params.id);
             const studentTableDetails = await student.findOne(
                 {
                     where: {
-                        student_id: id
+                        student_id: JSON.parse(newParamId)
                     }
                 }
             )
@@ -265,8 +266,7 @@ export default class StudentController extends BaseController {
             }
 
             const where: any = {};
-            const newParamId = await this.authService.decryptGlobal(req.params.id);
-            where[`${this.model}_id`] = newParamId;
+            where[`${this.model}_id`] = JSON.parse(newParamId);
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
             if (req.body.username) {
@@ -321,7 +321,7 @@ export default class StudentController extends BaseController {
     }
     protected async deleteData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { model, id } = req.params;
@@ -469,7 +469,7 @@ export default class StudentController extends BaseController {
     }
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {
@@ -484,8 +484,8 @@ export default class StudentController extends BaseController {
         }
     }
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         // accept the user_id or user_name from the req.body and update the password in the user table
         // perviously while student registration changes we have changed the password is changed to random generated UUID and stored and send in the payload,
@@ -523,18 +523,11 @@ export default class StudentController extends BaseController {
     }
     private async addBadgeToStudent(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             //todo: test this api : haven't manually tested this api yet 
-            let newREParams : any = {};
-            if(req.params){
-                const newParams : any = await this.authService.decryptGlobal(req.params);
-                newREParams = JSON.parse(newParams);
-            }else {
-                newREParams = req.params
-            }
-            const student_user_id: any = newREParams.student_user_id;
+            const student_user_id: any = await this.authService.decryptGlobal(req.params.student_user_id);
             const badges_ids: any = req.body.badge_ids;
             const badges_slugs: any = req.body.badge_slugs;
             let areSlugsBeingUsed = true;
@@ -622,18 +615,11 @@ export default class StudentController extends BaseController {
     }
     private async getStudentBadges(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         //todo: implement this api ...!!
         try {
-            let newREParams : any = {};
-            if(req.params){
-                const newParams : any = await this.authService.decryptGlobal(req.params);
-                newREParams = JSON.parse(newParams);
-            }else {
-                newREParams = req.params
-            }
-            const student_user_id: any = newREParams.student_user_id;
+            const student_user_id : any = await this.authService.decryptGlobal(req.params.student_user_id);
             const serviceStudent = new StudentService()
             let studentBadgesObj: any = await serviceStudent.getStudentBadges(student_user_id);
             ///do not do empty or null check since badges obj can be null if no badges earned yet hence this is not an error condition 
@@ -694,7 +680,7 @@ export default class StudentController extends BaseController {
     }
     private async studentPasswordUpdate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let count: any = 0;
@@ -718,7 +704,7 @@ export default class StudentController extends BaseController {
     }
     private async studentCertificate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREParams : any = {};
@@ -738,7 +724,6 @@ export default class StudentController extends BaseController {
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
             payload["certificate"] = new Date().toLocaleString();
-            console.log(payload);
             const updateCertificate = await this.crudService.updateAndFind(student, payload, {
                 where: { student_id: student_user_id }
             });
@@ -755,7 +740,7 @@ export default class StudentController extends BaseController {
     }
     private async stuIdeaSubmissionEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { mentor_id,team_id,team_name,title} = req.body;

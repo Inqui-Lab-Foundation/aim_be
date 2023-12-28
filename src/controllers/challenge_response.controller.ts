@@ -28,6 +28,7 @@ import { organization } from "../models/organization.model";
 import { evaluation_process } from "../models/evaluation_process.model";
 import { evaluator_rating } from "../models/evaluator_rating.model";
 import { evaluation_results } from "../models/evaluation_results";
+import CryptoJS from 'crypto-js';
 
 export default class ChallengeResponsesController extends BaseController {
 
@@ -60,8 +61,8 @@ export default class ChallengeResponsesController extends BaseController {
     }
 
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'REPORT'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         let user_id = res.locals.user_id || res.locals.state_coordinators_id;
         let newREQQuery : any = {}
@@ -554,7 +555,7 @@ export default class ChallengeResponsesController extends BaseController {
     };
     protected async getRandomChallenge(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EVALUATOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let challengeResponse: any;
@@ -761,7 +762,7 @@ export default class ChallengeResponsesController extends BaseController {
     }
     protected async createData(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' ){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -857,8 +858,8 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' ){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'EVALUATOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { model, id } = req.params;
@@ -895,8 +896,8 @@ export default class ChallengeResponsesController extends BaseController {
         }
     };
     protected async updateAnyFields(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' ){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             const { model, id } = req.params;
@@ -904,6 +905,11 @@ export default class ChallengeResponsesController extends BaseController {
                 this.model = model;
             };
             const {status} = req.body;
+            
+            const newParamId : any = await this.authService.decryptGlobal(req.params.id);
+            const decoded = atob(req.params.id);
+            const apikey = 'PMBXDE9N53V89K65';
+            const decryptValue = CryptoJS.AES.decrypt(decoded, apikey).toString(CryptoJS.enc.Utf8);
             let newREQQuery : any = {}
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
@@ -921,7 +927,8 @@ export default class ChallengeResponsesController extends BaseController {
             }
             const user_id = res.locals.user_id
             const where: any = {};
-            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            
+           
             where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
@@ -941,7 +948,7 @@ export default class ChallengeResponsesController extends BaseController {
     }
     protected async initiateIdea(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' ){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -1002,7 +1009,7 @@ export default class ChallengeResponsesController extends BaseController {
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' ){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -1061,7 +1068,7 @@ export default class ChallengeResponsesController extends BaseController {
     }
     protected async submission(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' ){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let collectAllChallengeResponseIds: any = [];
@@ -1081,8 +1088,8 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async getResponse(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -1115,7 +1122,7 @@ export default class ChallengeResponsesController extends BaseController {
             if (id) {
                 const newParamId = await this.authService.decryptGlobal(req.params.id);
                 where[`${this.model}_id`] = newParamId;
-                console.log(where)
+             
                 data = await this.crudService.findOne(challenge_response, {
                     attributes: [
                         [
@@ -1235,7 +1242,7 @@ export default class ChallengeResponsesController extends BaseController {
     }
     private async clearResponse(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -1267,7 +1274,7 @@ export default class ChallengeResponsesController extends BaseController {
     };
     private async getChallengesForEvaluator(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EVALUATOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -1456,7 +1463,7 @@ export default class ChallengeResponsesController extends BaseController {
     };
     private async getChallengesBasedOnFilter(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EVALUATOR' && res.locals.role !== 'EADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let newREQQuery : any = {}
@@ -1475,7 +1482,7 @@ export default class ChallengeResponsesController extends BaseController {
                 whereClause['sdg'] = sdg && typeof sdg == 'string' ? sdg : {}
             }
             // whereClauseOfSdg['sdg'] = { [Op.like]: sdg && typeof district == 'string' ? sdg : `%%` }
-            console.log(whereClause);
+          
             const data = await this.crudService.findAll(challenge_response, {
                 attributes: [
                     "challenge_response_id",
@@ -1535,7 +1542,7 @@ export default class ChallengeResponsesController extends BaseController {
     };
     private async finalEvaluation(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let user_id = res.locals.user_id;
@@ -1704,7 +1711,7 @@ export default class ChallengeResponsesController extends BaseController {
     };
     private async evaluationResult(req: Request, res: Response, next: NextFunction) {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
             let user_id = res.locals.user_id;
@@ -1873,8 +1880,8 @@ export default class ChallengeResponsesController extends BaseController {
         return 'nothing'
     }
     protected async getideastatusbyteamid(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'EADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try{
             let newREQQuery : any = {}
@@ -1892,8 +1899,8 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async getSchoolPdfIdeaStatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'EADMIN'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         let newREQQuery : any = {}
             if(req.query.Data){

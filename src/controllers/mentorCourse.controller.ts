@@ -36,7 +36,7 @@ export default class MentorCourseController extends BaseController {
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         let user_id = res.locals.user_id;
         if (!user_id) {
