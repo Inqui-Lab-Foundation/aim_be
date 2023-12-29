@@ -87,7 +87,7 @@ export default class ChallengeResponsesController extends BaseController {
         const sdg: any = newREQQuery.sdg;
         const rejected_reason: any = newREQQuery.rejected_reason;
         const rejected_reasonSecond: any = newREQQuery.rejected_reasonSecond;
-        const evaluator_id: any = newREQQuery.evaluator_id;
+        const evaluator_id: any = JSON.stringify(newREQQuery.evaluator_id);
         const level: any = newREQQuery.level;
         const yetToProcessList: any = newREQQuery.yetToProcessList;
         if (model) {
@@ -1648,7 +1648,7 @@ export default class ChallengeResponsesController extends BaseController {
                 where: {
                     [Op.and]: [
                         whereClauseStatusPart,
-                        where.liter,
+                       where.liter,
                     ]
                 },
                 include: [{
