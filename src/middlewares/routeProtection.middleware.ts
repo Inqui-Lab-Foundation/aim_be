@@ -43,7 +43,9 @@ export default async function routeProtectionMiddleware(
                 }
             }
         }else if(wildcardRoutes.indexOf(req.path) > -1){
-            hasAccess = true;
+            if(req.headers.authorization === 'O10ZPA0jZS38wP7cO9EhI3jaDf24WmKX62nWw870'){
+                hasAccess = true;
+            }
         }
         
         if (hasAccess) {

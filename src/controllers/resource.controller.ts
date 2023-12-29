@@ -89,6 +89,10 @@ export default class ResourceController extends BaseController {
         try {
             const rawfiles: any = req.files;
             const files: any = Object.values(rawfiles);
+            const allowedTypes = ['image/jpeg', 'image/png','application/msword','application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            if (!allowedTypes.includes(files[0].type)) {
+                return res.status(400).send(dispatcher(res,'','error','This file type not allowed',400)); 
+            }
             const errs: any = [];
             let attachments: any = [];
             let result: any = {};
