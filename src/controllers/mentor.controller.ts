@@ -512,14 +512,7 @@ export default class MentorController extends BaseController {
             return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         } 
         try {
-            let newREParams : any = {};
-            if(req.params){
-                const newParams : any = await this.authService.decryptGlobal(req.params);
-                newREParams = JSON.parse(newParams);
-            }else {
-                newREParams = req.params
-            }
-            const { mentor_user_id } = newREParams;
+            const mentor_user_id : any = await this.authService.decryptGlobal(req.params.mentor_user_id);
             // const { mobile } = req.body;
             if (!mentor_user_id) {
                 throw badRequest(speeches.USER_USERID_REQUIRED);

@@ -907,9 +907,6 @@ export default class ChallengeResponsesController extends BaseController {
             const {status} = req.body;
             
             const newParamId : any = await this.authService.decryptGlobal(req.params.id);
-            const decoded = atob(req.params.id);
-            const apikey = 'PMBXDE9N53V89K65';
-            const decryptValue = CryptoJS.AES.decrypt(decoded, apikey).toString(CryptoJS.enc.Utf8);
             let newREQQuery : any = {}
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
