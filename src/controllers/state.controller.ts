@@ -48,6 +48,9 @@ export default class StateController extends BaseController {
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' &&res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         const result = await this.authService.statechangePassword(req.body, res);
         if (!result) {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));

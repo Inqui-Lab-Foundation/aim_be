@@ -5,6 +5,7 @@ import { S3 } from "aws-sdk";
 import fs from 'fs';
 import { Request, Response, NextFunction } from 'express';
 import dispatcher from "../utils/dispatch.util";
+import { speeches } from "../configs/speeches.config";
 
 export default class popupController extends BaseController {
 
@@ -21,9 +22,17 @@ export default class popupController extends BaseController {
         super.initializeRoutes();
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
+        
         try {
             const rawfiles: any = req.files;
             const files: any = Object.values(rawfiles);
+            const allowedTypes = ['image/jpeg', 'image/png'];
+            if (!allowedTypes.includes(files[0].type)) {
+                return res.status(400).send(dispatcher(res,'','error','This file type not allowed',400)); 
+            }
             const errs: any = [];
             let attachments: any = [];
             let result: any = {};

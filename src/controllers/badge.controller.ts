@@ -6,6 +6,8 @@ import { constents } from "../configs/constents.config";
 import { badgeSchema, badgeUpdateSchema } from "../validations/badges.validations";
 import ValidationsHolder from "../validations/validationHolder";
 import BaseController from "./base.controller";
+import { unauthorized } from "boom";
+import { speeches } from "../configs/speeches.config";
 
 export default class BadgeController extends BaseController {
 
@@ -28,6 +30,9 @@ export default class BadgeController extends BaseController {
     }
 
     protected getData(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         return super.getData(req,res,next,[],
                     {exclude:constents.SEQUELIZE_FLAGS.DEFAULT_EXCLUDE_SCOPE})
     }

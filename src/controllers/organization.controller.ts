@@ -85,15 +85,25 @@ export default class OrganizationController extends BaseController {
     }
 
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         try {
             let data: any;
             const { model, id } = req.params;
-            const paramStatus: any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const paramStatus: any = newREQQuery.status;
             if (model) {
                 this.model = model;
             };
             // pagination
-            const { page, size, status } = req.query;
+            const { page, size, status } = newREQQuery;
             // let condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error => {
@@ -120,7 +130,8 @@ export default class OrganizationController extends BaseController {
                 addWhereClauseStatusPart = true;
             };
             if (id) {
-                where[`${this.model}_id`] = req.params.id;
+                const newParamId = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = newParamId;
                 data = await this.crudService.findOne(modelClass, {
                     where: {
                         [Op.and]: [
@@ -182,7 +193,14 @@ export default class OrganizationController extends BaseController {
     private async getGroupByDistrict(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let response: any = [];
-            const { state } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { state } = newREQQuery;
             const { model } = req.params;
             if (model) {
                 this.model = model;
@@ -265,7 +283,14 @@ export default class OrganizationController extends BaseController {
     private async getGroupBypinCode(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let response: any = [];
-            const { district } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { district } = newREQQuery;
             const { model } = req.params;
             if (model) {
                 this.model = model;
@@ -298,7 +323,14 @@ export default class OrganizationController extends BaseController {
     private async getGroupByATLCode(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let response: any = [];
-            const { pin_code } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { pin_code } = newREQQuery;
             const { model } = req.params;
             if (model) {
                 this.model = model;
@@ -326,7 +358,14 @@ export default class OrganizationController extends BaseController {
     }
     private async createOrg(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         // console.log(req.body);
-        const {nonatlcode} = req.query;
+        let newREQQuery : any = {}
+        if(req.query.Data){
+            let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+            newREQQuery  = JSON.parse(newQuery);
+        }else{
+            newREQQuery = req.query;
+        }
+        const {nonatlcode} = newREQQuery;
         if(nonatlcode){
             const orgcode = req.body.organization_code;
             const findOrgCode  = await db.query(`SELECT count(*) as orgCount  FROM organizations where organization_code like '${orgcode}-%';`,{ type: QueryTypes.SELECT });

@@ -9,6 +9,7 @@ import { courseModuleSchema, courseModuleUpdateSchema } from "../validations/cou
 import { translationSchema, translationUpdateSchema } from "../validations/translation.validations";
 import ValidationsHolder from "../validations/validationHolder";
 import BaseController from "./base.controller";
+import { speeches } from "../configs/speeches.config";
 
 export default class TranslationController extends BaseController {
 
@@ -28,8 +29,18 @@ export default class TranslationController extends BaseController {
         super.initializeRoutes();
     }
     protected async getTrasnlationKey(req:Request,res:Response,next:NextFunction){
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
-            const value:any = req.query.val
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const value:any = newREQQuery.val
             if(!value){
                 throw badRequest();
             }
@@ -42,6 +53,9 @@ export default class TranslationController extends BaseController {
         }
     }
     protected async refreshTranslation(req:Request,res:Response,next:NextFunction){
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
             const service = new TranslationService();
             await service.refreshDataFromDb();
@@ -53,7 +67,9 @@ export default class TranslationController extends BaseController {
 
     protected async translationRefresh(req:Request,res:Response,next:NextFunction)
     {
-        console.log("Req ",req)
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         let translateTable = req.body?.translateTable ? req.body?.translateTable : '*';
         
         try{

@@ -39,8 +39,10 @@ export default class ReflectiveQuizController extends BaseController {
 
     protected async  getNextQuestion(req:Request,res:Response,next:NextFunction): Promise<Response | void> {
         try{
-            const  video_id  = req.params.id;
-            const  paramStatus :any = req.query.status;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            const  video_id  = newParamId;
+            const newStatus = await this.authService.decryptGlobal(req.params.status);
+            const  paramStatus :any = newStatus;
             const user_id =  res.locals.user_id;
             
             const nextQuestionsToChooseFrom:any = await this.reflectiveQuizService.fetchNextQuestion(user_id,video_id,paramStatus)
@@ -95,8 +97,8 @@ export default class ReflectiveQuizController extends BaseController {
 
     protected async submitResponse(req:Request,res:Response,next:NextFunction) {
         try{
-            
-            const  video_id  = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            const  video_id  = newParamId;
             const {reflective_quiz_question_id,selected_option} = req.body;
             const user_id =  res.locals.user_id;
             if(!video_id){
