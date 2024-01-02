@@ -77,16 +77,26 @@ export default class ReportController extends BaseController {
     }
 
     protected async getMentorRegList(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         try {
             const { quiz_survey_id } = req.params
-            const { page, size, status ,district,category,state} = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { page, size, status ,district,category,state} = newREQQuery;
             let condition = {}
             // condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(this.model).catch(error => {
                 next(error)
             });
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -170,16 +180,26 @@ export default class ReportController extends BaseController {
     }
 
     protected async mentorPreSurvey(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { quiz_survey_id } = req.params
-            const { page, size, role, qid } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { page, size, role, qid } = newREQQuery;
             //let condition = role ? role : 'MENTOR';
             // let condition = role ? { role: { [Op.eq]: role } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(this.model).catch(error => {
                 next(error)
             });
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -241,16 +261,26 @@ export default class ReportController extends BaseController {
     }
 
     protected async mentorPostSurvey(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { quiz_survey_id } = req.params
-            const { page, size, role, qid } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { page, size, role, qid } = newREQQuery;
             //let condition = role ? role : 'MENTOR';
             // let condition = role ? { role: { [Op.eq]: role } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(this.model).catch(error => {
                 next(error)
             });
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
 
@@ -313,15 +343,25 @@ export default class ReportController extends BaseController {
     }
 
     protected async courseComplete(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { quiz_survey_id } = req.params
-            const { page, size, role } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { page, size, role } = newREQQuery;
             let condition = role ? { role: { [Op.eq]: role } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(this.model).catch(error => {
                 next(error)
             });
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -352,15 +392,25 @@ export default class ReportController extends BaseController {
         }
     }
     protected async courseInComplete(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { quiz_survey_id } = req.params
-            const { page, size, role } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { page, size, role } = newREQQuery;
             let condition = role ? { role: { [Op.eq]: role } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(this.model).catch(error => {
                 next(error)
             });
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -370,7 +420,6 @@ export default class ReportController extends BaseController {
                 addWhereClauseStatusPart = true;
             }
             const mentorsResult = await db.query("SELECT mentors.organization_code, mentors.district, mentors.full_name,(SELECT COUNT(mentor_topic_progress_id)FROM mentor_topic_progress AS mentor_progress WHERE mentor_progress.user_id=mentors.user_id) AS 'count' FROM mentors LEFT OUTER JOIN mentor_topic_progress AS mentor_progress ON mentors.user_id=mentor_progress.user_id where (SELECT COUNT(mentor_topic_progress_id)FROM mentor_topic_progress AS mentor_progress WHERE mentor_progress.user_id=mentors.user_id) != 9 GROUP BY mentor_progress.user_id", { type: QueryTypes.SELECT });
-            console.log(mentorsResult);
             if (!mentorsResult) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
@@ -383,15 +432,25 @@ export default class ReportController extends BaseController {
         }
     }
     protected async notRegistered(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { quiz_survey_id } = req.params
-            const { page, size, role,district,category,state } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { page, size, role,district,category,state } = newREQQuery;
             let condition = role ? { role: { [Op.eq]: role } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(this.model).catch(error => {
                 next(error)
             });
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -453,6 +512,9 @@ export default class ReportController extends BaseController {
         }
     }
     protected async userTopicProgressGroupByCourseTopicId(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const mentorsResult = await db.query("SELECT course_topic_id, count(user_id) as count FROM user_topic_progress group by course_topic_id", { type: QueryTypes.SELECT });
             if (!mentorsResult) {
@@ -467,15 +529,25 @@ export default class ReportController extends BaseController {
         }
     }
     protected async teamRegistered(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { quiz_survey_id } = req.params
-            const { page, size, role } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { page, size, role } = newREQQuery;
             let condition = role ? role : 'MENTOR';
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(this.model).catch(error => {
                 next(error)
             });
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -546,15 +618,25 @@ export default class ReportController extends BaseController {
         }
     }
     protected async challengesLevelCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { quiz_survey_id } = req.params
-            const { page, size, role } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const { page, size, role } = newREQQuery;
             let condition = role ? { role: { [Op.eq]: role } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(this.model).catch(error => {
                 next(error)
             });
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -583,9 +665,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async districtWiseChallengesCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let challenges: any
-            let level = req.query.level;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            let level = newREQQuery.level;
             if (level && typeof level == 'string') {
                 switch (level) {
                     case 'DRAFT': challenges = await db.query("SELECT district, count(challenge_response_id) as count FROM unisolve_db.challenge_responses WHERE status = 'DRAFT' group by district", { type: QueryTypes.SELECT });
@@ -622,14 +714,23 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getAllMentorReports(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-
-            let tr: any = req.query.tr;
-            let tpre: any = req.query.tpre;
-            let tc: any = req.query.tc;
-            let tpost: any = req.query.tpost;
-            let rs: any = req.query.rs;
-            let dis: any = req.query.dis;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            let tr: any = newREQQuery.tr;
+            let tpre: any = newREQQuery.tpre;
+            let tc: any = newREQQuery.tc;
+            let tpost: any = newREQQuery.tpost;
+            let rs: any = newREQQuery.rs;
+            let dis: any = newREQQuery.dis;
 
             if (!rs ||
                 !(rs in constents.reports_all_ment_reports_rs_flags.list)) {
@@ -799,6 +900,9 @@ export default class ReportController extends BaseController {
         }
     }
     protected async mentorRegNONregCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
             const notRegisteredCount = await db.query("SELECT COUNT(*) AS 'notRegisteredCount' FROM organizations WHERE NOT EXISTS( SELECT mentors.organization_code FROM mentors WHERE organizations.organization_code = mentors.organization_code ); ", { type: QueryTypes.SELECT });
@@ -824,6 +928,9 @@ export default class ReportController extends BaseController {
         }
     }
     protected async mentorstudentSurveyCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
             const surveyCount = await db.query(`
@@ -849,6 +956,9 @@ export default class ReportController extends BaseController {
     }
 
     protected async mentordeatilscsv(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
             const details = await db.query(`SELECT
@@ -917,9 +1027,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async mentorsummary(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const state = req.query.state;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const state = newREQQuery.state;
             let summary 
             if(state){
                 summary = await db.query(`SELECT 
@@ -1067,8 +1187,18 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getmentorSurvey(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-            const id = req.query.id;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const id = newREQQuery.id;
             let data: any = {}
             const summary = await db.query(`SELECT 
             mn.organization_code AS 'UDISE Code',
@@ -1099,8 +1229,18 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getstudentSurvey(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-            const id = req.query.id;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const id = newREQQuery.id;
             let data: any = {}
             const summary = await db.query(`SELECT 
             mn.organization_code AS 'UDISE Code',
@@ -1133,8 +1273,18 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getstudentDetailsreport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-            const {category,district,state} = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {category,district,state} = newREQQuery;
             let data: any = {}
             let districtFilter: any = ''
             let categoryFilter:any = ''
@@ -1204,8 +1354,18 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getmentorDetailsreport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-            const {category,district,state} = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {category,district,state} = newREQQuery;
             let data: any = {}
             let districtFilter: any = ''
             let categoryFilter:any = ''
@@ -1273,9 +1433,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getmentorDetailstable(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const state = req.query.state;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const state = newREQQuery.state;
             let wherefilter = '';
             if(state){
                 wherefilter = `&& og.state= '${state}'`;
@@ -1366,9 +1536,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getstudentDetailstable(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const state = req.query.state;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const state = newREQQuery.state;
             let wherefilter = '';
             if(state){
                 wherefilter = `&& og.state= '${state}'`;
@@ -1477,6 +1657,9 @@ export default class ReportController extends BaseController {
         }
     }
     private async refreshSchoolDReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const service = new SchoolDReportService()
             await service.executeSchoolDReport()
@@ -1487,6 +1670,9 @@ export default class ReportController extends BaseController {
         }
     }
     private async refreshStudentDReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const service = new StudentDReportService()
             await service.executeStudentDReport()
@@ -1497,9 +1683,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getstudentATLnonATLcount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const state = req.query.state;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const state = newREQQuery.state;
             let wherefilter = '';
             if(state){
                 wherefilter = `WHERE org.state= '${state}'`;
@@ -1550,9 +1746,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getideaReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const {state,district,sdg,category} = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {state,district,sdg,category} = newREQQuery;
             let districtFilter: any = `'%%'`
             let categoryFilter:any = `'%%'`
             let stateFilter:any = `'%%'`
@@ -1603,9 +1809,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL1Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const {state,district,sdg,category} = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {state,district,sdg,category} = newREQQuery;
             let districtFilter: any = `'%%'`
             let categoryFilter:any = `'%%'`
             let stateFilter:any = `'%%'`
@@ -1657,9 +1873,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL2Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const {state,district,sdg,category} = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {state,district,sdg,category} = newREQQuery;
             let districtFilter: any = `'%%'`
             let categoryFilter:any = `'%%'`
             let stateFilter:any = `'%%'`
@@ -1714,9 +1940,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL3Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const {state,district,sdg,category} = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const {state,district,sdg,category} = newREQQuery;
             let districtFilter: any = `'%%'`
             let categoryFilter:any = `'%%'`
             let stateFilter:any = `'%%'`
@@ -1771,9 +2007,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getideaReportTable(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const state = req.query.state;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const state = newREQQuery.state;
             let wherefilter = '';
             if(state){
                 wherefilter = `WHERE org.state= '${state}'`;
@@ -1850,9 +2096,19 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL1ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const state = req.query.state;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const state = newREQQuery.state;
             let wherefilter = '';
             if(state){
                 wherefilter = `WHERE org.state= '${state}'`;
@@ -1894,6 +2150,9 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL1ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
             const summary = await db.query(`SELECT 
@@ -1926,6 +2185,9 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL2ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
             const summary = await db.query(`SELECT 
@@ -1950,6 +2212,9 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL2ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
             const summary = await db.query(`SELECT 
@@ -1972,6 +2237,9 @@ export default class ReportController extends BaseController {
         }
     }
     protected async getL3ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
             const summary = await db.query(`
@@ -2000,9 +2268,19 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
         }
     }
     protected async getL3ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any = {}
-            const state = req.query.state;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const state = newREQQuery.state;
             let wherefilter = '';
             if(state){
                 wherefilter = `WHERE org.state= '${state}'`;

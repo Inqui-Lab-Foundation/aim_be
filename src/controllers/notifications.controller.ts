@@ -115,7 +115,6 @@ export default class NotificationsController {
     }
 
     public getAll = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-        console.log(res.locals);
         let notifications: any = await this.crudService.findWhere(notification, {
             [Op.and]: [
                 {

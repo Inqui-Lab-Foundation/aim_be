@@ -35,11 +35,15 @@ export default class MentorCourseController extends BaseController {
         return res.status(200).json(dispatcher(res,"this was a success ....!!!"));
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         let user_id = res.locals.user_id;
         if (!user_id) {
             throw unauthorized(speeches.UNAUTHORIZED_ACCESS)
         }
-        const { id } = req.params;
+        const newParams : any = await this.authService.decryptGlobal(req.params.id);
+        const id = JSON.parse(newParams);
         const objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
         let includePart = null
         let orderBypart:any = []

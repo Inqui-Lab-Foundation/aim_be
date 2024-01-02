@@ -6,7 +6,7 @@ import BaseController from "./base.controller";
 import dispatcher from '../utils/dispatch.util';
 import {faq} from '../models/faq.model';
 import { translation } from "../models/translation.model";
-import { badRequest } from 'boom';
+import { badRequest, unauthorized } from 'boom';
 import { speeches } from '../configs/speeches.config';
 
 export default class FaqController extends BaseController {
@@ -28,9 +28,13 @@ export default class FaqController extends BaseController {
         super.initializeRoutes();
         
     }
-    protected async getbyCategoryid(req: Request, res: Response, next: NextFunction) {  
+    protected async getbyCategoryid(req: Request, res: Response, next: NextFunction) { 
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         try{
-            const id = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            const id = newParamId;
             if (!id) throw badRequest(speeches.FAQ_CATEGORY);
 
             const data = await this.crudService.findAll(faq,{
@@ -47,6 +51,9 @@ export default class FaqController extends BaseController {
     }
    
     protected async addfaq(req: Request, res: Response, next: NextFunction) {  
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
             let result :any = {};
             if (!req.body.faq_category_id) throw badRequest(speeches.FAQ_CATEGORY);
@@ -122,9 +129,19 @@ export default class FaqController extends BaseController {
         } 
     }
     protected async editfaq(req: Request, res: Response, next: NextFunction) {  
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
             let result :any = {};
-            const faqId = req.query.faq_id;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const faqId = newREQQuery.faq_id;
             if (!faqId) throw badRequest(speeches.FAQ_ID);
             if (!req.body.faq_category_id) throw badRequest(speeches.FAQ_CATEGORY);
             if (!req.body.question) throw badRequest(speeches.QUESTION_REQUIRED);
@@ -195,9 +212,19 @@ export default class FaqController extends BaseController {
         } 
     }
     protected async deletefaq(req: Request, res: Response, next: NextFunction) {  
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
             let result :any = {};
-            const faqId = req.query.faq_id;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else{
+                newREQQuery = req.query;
+            }
+            const faqId = newREQQuery.faq_id;
             if (!faqId) throw badRequest(speeches.FAQ_ID);
 
             const data = await this.crudService.delete(faq,{where:{faq_id:faqId}});
@@ -262,6 +289,9 @@ export default class FaqController extends BaseController {
     }
 
     protected getData(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        } 
         return super.getData(req,res,next,[],
                     {exclude:constents.SEQUELIZE_FLAGS.DEFAULT_EXCLUDE_SCOPE})
     }

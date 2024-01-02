@@ -4,6 +4,8 @@ import { challenge_question } from "../models/challenge_questions.model";
 import ValidationsHolder from "../validations/validationHolder";
 import BaseController from "./base.controller";
 import { challengeSchema, challengeUpdateSchema } from "../validations/challenge.validations copy";
+import { unauthorized } from "boom";
+import { speeches } from "../configs/speeches.config";
 export default class ChallengeController extends BaseController {
 
     model = "challenge";
@@ -18,6 +20,9 @@ export default class ChallengeController extends BaseController {
         super.initializeRoutes();
     }
     protected getData(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         return super.getData(req, res, next,
             [],
             { exclude: constents.SEQUELIZE_FLAGS.DEFAULT_EXCLUDE_SCOPE_WITHOUT_STATUS_CREATEDATTRS },
