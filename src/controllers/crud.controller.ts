@@ -96,8 +96,8 @@ export default class CRUDController implements IController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             let data: any;
             const { model, id } = req.params;

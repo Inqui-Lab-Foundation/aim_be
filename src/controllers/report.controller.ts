@@ -86,8 +86,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const { page, size, status ,district,category,state} = newREQQuery;
             let condition = {}
@@ -189,8 +189,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const { page, size, role, qid } = newREQQuery;
             //let condition = role ? role : 'MENTOR';
@@ -270,8 +270,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const { page, size, role, qid } = newREQQuery;
             //let condition = role ? role : 'MENTOR';
@@ -352,8 +352,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const { page, size, role } = newREQQuery;
             let condition = role ? { role: { [Op.eq]: role } } : null;
@@ -401,8 +401,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const { page, size, role } = newREQQuery;
             let condition = role ? { role: { [Op.eq]: role } } : null;
@@ -441,8 +441,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const { page, size, role,district,category,state } = newREQQuery;
             let condition = role ? { role: { [Op.eq]: role } } : null;
@@ -538,8 +538,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const { page, size, role } = newREQQuery;
             let condition = role ? role : 'MENTOR';
@@ -627,8 +627,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const { page, size, role } = newREQQuery;
             let condition = role ? { role: { [Op.eq]: role } } : null;
@@ -674,8 +674,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             let level = newREQQuery.level;
             if (level && typeof level == 'string') {
@@ -722,8 +722,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             let tr: any = newREQQuery.tr;
             let tpre: any = newREQQuery.tpre;
@@ -1036,8 +1036,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const state = newREQQuery.state;
             let summary 
@@ -1195,8 +1195,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const id = newREQQuery.id;
             let data: any = {}
@@ -1237,8 +1237,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const id = newREQQuery.id;
             let data: any = {}
@@ -1281,8 +1281,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {category,district,state} = newREQQuery;
             let data: any = {}
@@ -1362,8 +1362,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {category,district,state} = newREQQuery;
             let data: any = {}
@@ -1442,8 +1442,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const state = newREQQuery.state;
             let wherefilter = '';
@@ -1545,8 +1545,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const state = newREQQuery.state;
             let wherefilter = '';
@@ -1692,8 +1692,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const state = newREQQuery.state;
             let wherefilter = '';
@@ -1755,8 +1755,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {state,district,sdg,category} = newREQQuery;
             let districtFilter: any = `'%%'`
@@ -1818,8 +1818,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {state,district,sdg,category} = newREQQuery;
             let districtFilter: any = `'%%'`
@@ -1882,8 +1882,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {state,district,sdg,category} = newREQQuery;
             let districtFilter: any = `'%%'`
@@ -1949,8 +1949,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {state,district,sdg,category} = newREQQuery;
             let districtFilter: any = `'%%'`
@@ -2016,8 +2016,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const state = newREQQuery.state;
             let wherefilter = '';
@@ -2105,8 +2105,8 @@ export default class ReportController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const state = newREQQuery.state;
             let wherefilter = '';
@@ -2277,8 +2277,8 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const state = newREQQuery.state;
             let wherefilter = '';

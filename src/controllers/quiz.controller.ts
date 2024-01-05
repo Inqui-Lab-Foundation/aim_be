@@ -53,8 +53,8 @@ export default class QuizController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const newParamId = await this.authService.decryptGlobal(req.params.id);
             const quiz_id = newParamId;
@@ -377,8 +377,8 @@ export default class QuizController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {user_id , quiz_id} = newREQQuery;
             let result: any = {}

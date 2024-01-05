@@ -37,8 +37,8 @@ export default class TranslationController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const value:any = newREQQuery.val
             if(!value){
