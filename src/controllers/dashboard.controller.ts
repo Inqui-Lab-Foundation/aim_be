@@ -394,8 +394,8 @@ export default class DashboardController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
@@ -784,8 +784,8 @@ export default class DashboardController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {user_id,role} = newREQQuery
             const quizscores = await db.query(`SELECT user_id,quiz_id,attempts,score FROM unisolve_db.quiz_responses where user_id = ${user_id}`,{ type: QueryTypes.SELECT })
@@ -811,8 +811,8 @@ export default class DashboardController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {mentor_id} = newREQQuery
             if(mentor_id){
@@ -846,8 +846,8 @@ export default class DashboardController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {mentor_id} = newREQQuery
             if(mentor_id){
@@ -883,8 +883,8 @@ export default class DashboardController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {mentor_id} = newREQQuery
             if(mentor_id){
@@ -906,8 +906,8 @@ export default class DashboardController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {user_id} = newREQQuery
             if(user_id){
@@ -1153,8 +1153,8 @@ export default class DashboardController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const state = newREQQuery.state;
             let wherefilter = `&& og.state= '${state}'`;
