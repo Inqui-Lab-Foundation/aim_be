@@ -30,11 +30,11 @@ export const translationMiddleware = (req:Request,res:Response,next:NextFunction
         const decoded = atob(value);
         const newQuery = CryptoJS.AES.decrypt(decoded, apikey).toString(CryptoJS.enc.Utf8);
         newREQQuery  = JSON.parse(newQuery);
+        locale = newREQQuery.locale;
     }
     else{
-        newREQQuery = req.query;
+        locale = 'en';
     }
-    locale = newREQQuery.locale;
     const trasnlationService = new TranslationService()
     if(!locale || !trasnlationService.getSupportedLocales().includes(locale)){
         locale  = constents.translations_flags.default_locale

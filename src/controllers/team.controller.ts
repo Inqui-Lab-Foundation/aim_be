@@ -53,8 +53,8 @@ export default class TeamController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             let mentor_id:any = null
             const { page, size,  } = newREQQuery;
@@ -254,8 +254,8 @@ export default class TeamController extends BaseController {
         if(req.query.Data){
             let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
             newREQQuery  = JSON.parse(newQuery);
-        }else{
-            newREQQuery = req.query;
+        }else if(Object.keys(req.query).length !== 0){
+            return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
         }
         const paramStatus: any = newREQQuery.status;
         if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
@@ -407,8 +407,8 @@ export default class TeamController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const mentorId = newREQQuery.mentor_id;
             const result  = await db.query(`SELECT teams.team_id, team_name, COUNT(students.team_id) as StudentCount FROM teams left JOIN students ON teams.team_id = students.team_id where mentor_id = ${mentorId} GROUP BY teams.team_id order by team_id desc`,{ type: QueryTypes.SELECT });
@@ -426,8 +426,8 @@ export default class TeamController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const mentorId = newREQQuery.mentor_id;
             const result  = await db.query(`SELECT team_id,team_name FROM teams where mentor_id = ${mentorId} order by team_id desc;`,{ type: QueryTypes.SELECT });
@@ -445,8 +445,8 @@ export default class TeamController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const mentorId = newREQQuery.mentor_id;
             const result  = await db.query(`SELECT teams.team_id,team_name,COUNT(teams.team_id) AS StudentCount,challenge_responses.status AS ideaStatus
@@ -473,8 +473,8 @@ export default class TeamController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const {team_id} = newREQQuery;
             const result  = await db.query(`SELECT team_id,team_name,moc_name,moc_gender,moc_email,moc_phone FROM teams where team_id = ${team_id};`,{ type: QueryTypes.SELECT });
