@@ -42,7 +42,7 @@ export const organizationRawSchema = Joi.object().keys({
     unique_code:Joi.any(),
     city: Joi.any(),
     country: Joi.any(),
-    new_district:Joi.string(),
+    new_district:Joi.any(),
     status: Joi.string().valid(...Object.values(constents.organization_status_flags.list))
 });
 
@@ -71,7 +71,7 @@ export const organizationUpdateSchema = Joi.object().keys({
     pin_code: Joi.any(),
     address: Joi.any(),
     country: Joi.any(),
-    new_district:Joi.string()
+    new_district:Joi.any()
 });
 export const organizationCheckSchema = Joi.object().keys({
     organization_code: Joi.string().required().messages({
