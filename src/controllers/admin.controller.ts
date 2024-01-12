@@ -7,10 +7,11 @@ import BaseController from './base.controller';
 import ValidationsHolder from '../validations/validationHolder';
 import { user } from '../models/user.model';
 import { admin } from '../models/admin.model';
-import { adminSchema, adminUpdateSchema } from '../validations/admins.validationa';
+import { adminRegSchema, adminSchema, adminUpdateSchema } from '../validations/admins.validationa';
 import { badRequest, notFound, unauthorized } from 'boom';
 import db from "../utils/dbconnection.util"
 import { QueryTypes } from 'sequelize';
+import validationMiddleware from '../middlewares/validation.middleware';
 
 export default class AdminController extends BaseController {
     model = "admin";
@@ -26,7 +27,7 @@ export default class AdminController extends BaseController {
     protected initializeRoutes(): void {
         //example route to add
         //this.router.get(`${this.path}/`, this.getData);
-        this.router.post(`${this.path}/register`, this.register.bind(this));
+        this.router.post(`${this.path}/register`, validationMiddleware(adminRegSchema),this.register.bind(this));
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));

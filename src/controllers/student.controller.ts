@@ -3,7 +3,7 @@ import { customAlphabet } from 'nanoid';
 
 import { speeches } from '../configs/speeches.config';
 import dispatcher from '../utils/dispatch.util';
-import { studentSchema, studentLoginSchema, studentUpdateSchema, studentChangePasswordSchema, studentResetPasswordSchema } from '../validations/student.validationa';
+import { studentSchema, studentLoginSchema, studentUpdateSchema, studentChangePasswordSchema, studentResetPasswordSchema, studentRegSchema } from '../validations/student.validationa';
 import bcrypt from 'bcrypt';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
@@ -40,7 +40,7 @@ export default class StudentController extends BaseController {
     protected initializeRoutes(): void {
         //example route to add
         //this.router.get(`${this.path}/`, this.getData);
-        this.router.post(`${this.path}/register`, this.register.bind(this));
+        this.router.post(`${this.path}/register`, validationMiddleware(studentRegSchema),this.register.bind(this));
         this.router.post(`${this.path}/addStudent`, this.register.bind(this));
         this.router.post(`${this.path}/bulkCreateStudent`, this.bulkCreateStudent.bind(this));
         this.router.post(`${this.path}/login`, validationMiddleware(studentLoginSchema), this.login.bind(this));
