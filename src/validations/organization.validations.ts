@@ -18,19 +18,19 @@ export const organizationRawSchema = Joi.object().keys({
     organization_code: Joi.string().trim().min(1).required().messages({
         'string.empty': speeches.ORG_CODE_REQUIRED
     }),
-    organization_name: Joi.string().trim().min(1).required().messages({
+    organization_name: Joi.string().trim().min(1).required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.ORG_NAME_REQUIRED
     }),
-    district: Joi.string().required().messages({
+    district: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.DISTRICT_REQ
     }),
-    category: Joi.string().required().messages({
+    category: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.CATEGORY_REQ
     }),
-    state: Joi.string().required().messages({
+    state: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.STATE_REQ
     }),
-    pin_code: Joi.string().required().messages({
+    pin_code: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.PINCODE_REQ
     }),
     address: Joi.string().required().messages({
@@ -53,13 +53,13 @@ export const organizationUpdateSchema = Joi.object().keys({
     organization_code: Joi.string().trim().min(1).required().messages({
         'string.empty': speeches.ORG_CODE_REQUIRED
     }),
-    organization_name: Joi.string().trim().min(1).required().messages({
+    organization_name: Joi.string().trim().min(1).required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.ORG_NAME_REQUIRED
     }),
-    district: Joi.string().messages({
+    district: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.DISTRICT_REQ
     }),
-    category: Joi.string().messages({
+    category: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.CATEGORY_REQ
     }),
     principal_name: Joi.any(),
