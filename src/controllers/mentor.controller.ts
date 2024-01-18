@@ -9,7 +9,7 @@ import { speeches } from '../configs/speeches.config';
 import { baseConfig } from '../configs/base.config';
 import { user } from '../models/user.model';
 import db from "../utils/dbconnection.util"
-import { mentorSchema, mentorUpdateSchema } from '../validations/mentor.validationa';
+import { mentorRegSchema, mentorSchema, mentorUpdateSchema } from '../validations/mentor.validationa';
 import dispatcher from '../utils/dispatch.util';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
@@ -24,6 +24,7 @@ import { team } from '../models/team.model';
 import { student } from '../models/student.model';
 import { constents } from '../configs/constents.config';
 import { organization } from '../models/organization.model';
+import validationMiddleware from '../middlewares/validation.middleware';
 
 export default class MentorController extends BaseController {
     model = "mentor";
@@ -39,7 +40,7 @@ export default class MentorController extends BaseController {
     protected initializeRoutes(): void {
         //example route to add
         //this.router.get(`${this.path}/`, this.getData);
-        this.router.post(`${this.path}/register`, this.register.bind(this));
+        this.router.post(`${this.path}/register`, validationMiddleware(mentorRegSchema),this.register.bind(this));
         this.router.post(`${this.path}/validateOtp`, this.validateOtp.bind(this));
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
@@ -77,8 +78,8 @@ export default class MentorController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const { quiz_survey_id } = req.params
             const { page, size, status } = newREQQuery;
@@ -164,8 +165,8 @@ export default class MentorController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const paramStatus: any = newREQQuery.status;
             if (model) {
@@ -768,8 +769,8 @@ export default class MentorController extends BaseController {
             if(req.query.Data){
                 let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
                 newREQQuery  = JSON.parse(newQuery);
-            }else{
-                newREQQuery = req.query;
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
             }
             const id = newREQQuery.id;
             const user_id = newREQQuery.user_id;

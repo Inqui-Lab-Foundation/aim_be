@@ -6,12 +6,13 @@ import dispatcher from '../utils/dispatch.util';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
 import ValidationsHolder from '../validations/validationHolder';
-import { evaluatorSchema, evaluatorUpdateSchema } from '../validations/evaluator.validationa';
+import { evaluatorRegSchema, evaluatorSchema, evaluatorUpdateSchema } from '../validations/evaluator.validationa';
 import { evaluator } from '../models/evaluator.model';
 import { user } from '../models/user.model';
 import { badRequest, notFound, unauthorized } from 'boom';
 import db from "../utils/dbconnection.util"
 import { evaluation_process } from '../models/evaluation_process.model';
+import validationMiddleware from '../middlewares/validation.middleware';
 
 export default class EvaluatorController extends BaseController {
     model = "evaluator";
@@ -27,7 +28,7 @@ export default class EvaluatorController extends BaseController {
     protected initializeRoutes(): void {
         //example route to add
         //this.router.get(`${this.path}/`, this.getData);
-        this.router.post(`${this.path}/register`, this.register.bind(this));
+        this.router.post(`${this.path}/register`, validationMiddleware(evaluatorRegSchema),this.register.bind(this));
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
