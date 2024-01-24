@@ -32,7 +32,8 @@ export default class EvaluatorController extends BaseController {
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
-        this.router.post(`${this.path}/bulkUpload`, this.bulkUpload.bind(this))
+        this.router.post(`${this.path}/bulkUpload`, this.bulkUpload.bind(this));
+        this.router.put(`${this.path}/resetPassword`, this.resetPassword.bind(this));
         // this.router.put(`${this.path}/updatePassword`, this.updatePassword.bind(this));
         super.initializeRoutes();
     };
@@ -225,5 +226,27 @@ export default class EvaluatorController extends BaseController {
                 return res.status(400).send(dispatcher(res, { createdEntities: counter, existedEntities }, 'error', speeches.CSV_DATA_EXIST, 400));
             }
         });
+    }
+    private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
+        try {
+            const {mobile,username} = req.body;
+            if (!mobile) {
+                throw badRequest(speeches.MOBILE_NUMBER_REQUIRED);
+            }
+            if (!username) {
+                throw badRequest(speeches.USER_EMAIL_REQUIRED);
+            }
+            const result = await this.authService.evaluatorResetPassword(req.body);
+             if (result.error) {
+                return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
+            } else {
+                return res.status(202).send(dispatcher(res, result.data, 'accepted', 'The password has been reset', 202));
+            }
+        } catch (error) {
+            next(error)
+        }
     }
 };
