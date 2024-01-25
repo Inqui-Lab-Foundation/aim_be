@@ -71,7 +71,8 @@ export const organizationUpdateSchema = Joi.object().keys({
     pin_code: Joi.any(),
     address: Joi.any(),
     country: Joi.any(),
-    new_district:Joi.any()
+    new_district:Joi.any(),
+    unique_code:Joi.any(),
 });
 export const organizationCheckSchema = Joi.object().keys({
     organization_code: Joi.string().required().messages({
