@@ -3,6 +3,7 @@ import { speeches } from "../configs/speeches.config";
 import dispatcher from "../utils/dispatch.util";
 import BaseController from "./base.controller";
 import authService from "../services/auth.service";
+import { badRequest } from "boom";
 
 export default class StateController extends BaseController {
 
@@ -18,6 +19,7 @@ export default class StateController extends BaseController {
         this.router.post(`${this.path}/login`,this.login.bind(this));
         this.router.get(`${this.path}/logout`,this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
+        this.router.put(`${this.path}/resetPassword`, this.resetPassword.bind(this));
         super.initializeRoutes();
     };
 
@@ -61,6 +63,25 @@ export default class StateController extends BaseController {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_PASSWORD));
         } else {
             return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
+        }
+    }
+    private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' &&res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
+        try {
+            const {id} = req.body;
+            if (!id) {
+                throw badRequest(speeches.ID_REQUIRED);
+            }
+            const result = await this.authService.stateResetPassword(req.body);
+             if (result.error) {
+                return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
+            } else {
+                return res.status(202).send(dispatcher(res, result.data, 'accepted', 'The password has been reset', 202));
+            }
+        } catch (error) {
+            next(error)
         }
     }
 }

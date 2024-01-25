@@ -240,7 +240,8 @@ export default class MentorController extends BaseController {
                             "country",
                             "category",
                             "pin_code",
-                            "unique_code"
+                            "unique_code",
+                            "new_district"
                         ]
                     },
                 });
