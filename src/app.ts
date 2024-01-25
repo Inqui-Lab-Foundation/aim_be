@@ -192,6 +192,11 @@ export default class App {
      */
     private initializeControllers(controllers: IController[], prefix: string = "/api", version: string = "v1"): void {
         controllers.forEach((controller: IController) => {
+            this.app.use(`${prefix}/${version}`, (req, res, next) => {
+                res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+                next();
+            });
+    
             this.app.use(`${prefix}/${version}`, controller.router);
         });
     }
