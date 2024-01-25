@@ -22,6 +22,7 @@ import SchoolDReportJob from "./jobs/schoolDReport.jobs";
 import StudentDReportJob from "./jobs/studentDReport.jobs";
 import { translationMiddleware } from "./middlewares/translation.middleware";
 import TranslationService from "./services/translation.service";
+import IdeaReportJob from "./jobs/ideaReport.jobs";
 
 /**
  * Application Class is responsible to call internal validation middleware and establish the database connection.
@@ -98,6 +99,7 @@ export default class App {
         cronManager.addJob(new DashboardMapStatsJob())
         cronManager.addJob(new SchoolDReportJob())
         cronManager.addJob(new StudentDReportJob())
+        cronManager.addJob(new IdeaReportJob())
         cronManager.startAll();
     }
 
@@ -190,6 +192,11 @@ export default class App {
      */
     private initializeControllers(controllers: IController[], prefix: string = "/api", version: string = "v1"): void {
         controllers.forEach((controller: IController) => {
+            this.app.use(`${prefix}/${version}`, (req, res, next) => {
+                res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+                next();
+            });
+    
             this.app.use(`${prefix}/${version}`, controller.router);
         });
     }

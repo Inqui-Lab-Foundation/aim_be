@@ -8,6 +8,7 @@ import ValidationsHolder from "../validations/validationHolder";
 import {resourceSchema, resourceUpdateSchema} from '../validations/resource.validations';
 import { S3 } from "aws-sdk";
 import fs from 'fs';
+import { speeches } from "../configs/speeches.config";
 
 export default class ResourceController extends BaseController {
 
@@ -25,6 +26,9 @@ export default class ResourceController extends BaseController {
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
             let data:any
             data=await this.crudService.findAll(resource,{
@@ -44,10 +48,20 @@ export default class ResourceController extends BaseController {
         }
     }
     protected async getMentorResources(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
             let data: any;
-            const paramRole: any  = req.query.role;
-            const paramStatus: any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const paramRole: any  = newREQQuery.role;
+            const paramStatus: any = newREQQuery.status;
             const whereClauseRolePart = { "role": paramRole }
             data = await this.crudService.findAll(resource, {
                 where: {
@@ -69,9 +83,16 @@ export default class ResourceController extends BaseController {
         }
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const rawfiles: any = req.files;
             const files: any = Object.values(rawfiles);
+            const allowedTypes = ['image/jpeg', 'image/png','application/msword','application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            if (!allowedTypes.includes(files[0].type)) {
+                return res.status(400).send(dispatcher(res,'','error','This file type not allowed',400)); 
+            }
             const errs: any = [];
             let attachments: any = [];
             let result: any = {};

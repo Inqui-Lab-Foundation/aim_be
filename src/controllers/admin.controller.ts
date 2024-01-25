@@ -7,10 +7,11 @@ import BaseController from './base.controller';
 import ValidationsHolder from '../validations/validationHolder';
 import { user } from '../models/user.model';
 import { admin } from '../models/admin.model';
-import { adminSchema, adminUpdateSchema } from '../validations/admins.validationa';
-import { badRequest, notFound } from 'boom';
+import { adminRegSchema, adminSchema, adminUpdateSchema } from '../validations/admins.validationa';
+import { badRequest, notFound, unauthorized } from 'boom';
 import db from "../utils/dbconnection.util"
 import { QueryTypes } from 'sequelize';
+import validationMiddleware from '../middlewares/validation.middleware';
 
 export default class AdminController extends BaseController {
     model = "admin";
@@ -26,7 +27,7 @@ export default class AdminController extends BaseController {
     protected initializeRoutes(): void {
         //example route to add
         //this.router.get(`${this.path}/`, this.getData);
-        this.router.post(`${this.path}/register`, this.register.bind(this));
+        this.router.post(`${this.path}/register`, validationMiddleware(adminRegSchema),this.register.bind(this));
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
@@ -36,6 +37,9 @@ export default class AdminController extends BaseController {
         super.initializeRoutes();
     }
     protected getData(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
         return super.getData(req, res, next, [],
             [
                 "admin_id",
@@ -56,6 +60,9 @@ export default class AdminController extends BaseController {
     }
 
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { model, id } = req.params;
             if (model) {
@@ -63,7 +70,8 @@ export default class AdminController extends BaseController {
             };
             const user_id = res.locals.user_id
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded)
             const findAdminDetail = await this.crudService.findOne(modelLoaded, { where: where });
@@ -102,7 +110,14 @@ export default class AdminController extends BaseController {
 
     private async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         let adminDetails: any;
-        if (req.query.eAdmin && req.query.eAdmin == 'true') { req.body['role'] = 'EADMIN' } else if(req.query.report && req.query.report == 'true') { req.body['role'] = 'REPORT' } else{ req.body['role'] = 'ADMIN' }
+        let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+        if (newREQQuery.eAdmin && newREQQuery.eAdmin == 'true') { req.body['role'] = 'EADMIN' } else if(newREQQuery.report && newREQQuery.report == 'true') { req.body['role'] = 'REPORT' } else{ req.body['role'] = 'ADMIN' }
         const result = await this.authService.login(req.body);
         if (!result) {
             return res.status(404).send(dispatcher(res, result, 'error', speeches.USER_NOT_FOUND));
@@ -129,6 +144,9 @@ export default class AdminController extends BaseController {
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
@@ -155,6 +173,9 @@ export default class AdminController extends BaseController {
     //     }
     // }
     private async IdeaInDraftEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { date } = req.body;
             let data: any = {}
@@ -204,6 +225,9 @@ export default class AdminController extends BaseController {
         }
     }
     private async IdeaNotInitiatedEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { date } = req.body;
             let data: any = {}

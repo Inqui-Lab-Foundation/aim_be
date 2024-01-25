@@ -9,7 +9,7 @@ import { speeches } from '../configs/speeches.config';
 import { baseConfig } from '../configs/base.config';
 import { user } from '../models/user.model';
 import db from "../utils/dbconnection.util"
-import { mentorSchema, mentorUpdateSchema } from '../validations/mentor.validationa';
+import { mentorRegSchema, mentorSchema, mentorUpdateSchema } from '../validations/mentor.validationa';
 import dispatcher from '../utils/dispatch.util';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
@@ -24,7 +24,7 @@ import { team } from '../models/team.model';
 import { student } from '../models/student.model';
 import { constents } from '../configs/constents.config';
 import { organization } from '../models/organization.model';
-import CryptoJS from 'crypto-js';
+import validationMiddleware from '../middlewares/validation.middleware';
 
 export default class MentorController extends BaseController {
     model = "mentor";
@@ -40,7 +40,7 @@ export default class MentorController extends BaseController {
     protected initializeRoutes(): void {
         //example route to add
         //this.router.get(`${this.path}/`, this.getData);
-        this.router.post(`${this.path}/register`, this.register.bind(this));
+        this.router.post(`${this.path}/register`, validationMiddleware(mentorRegSchema),this.register.bind(this));
         this.router.post(`${this.path}/validateOtp`, this.validateOtp.bind(this));
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
@@ -74,13 +74,20 @@ export default class MentorController extends BaseController {
     }
     protected async getMentorRegStatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
             const { quiz_survey_id } = req.params
-            const { page, size, status } = req.query;
+            const { page, size, status } = newREQQuery;
             let condition = {}
             // condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
 
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let boolStatusWhereClauseRequired = false;
@@ -148,16 +155,26 @@ export default class MentorController extends BaseController {
 
     //TODO: Override the getDate function for mentor and join org details and user details
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         try {
             let data: any;
             const { model, id } = req.params;
-            const paramStatus: any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const paramStatus: any = newREQQuery.status;
             if (model) {
                 this.model = model;
             };
             // const current_user = res.locals.user_id; 
             // pagination
-            const { page, size, status } = req.query;
+            const { page, size, status } = newREQQuery;
             // let condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error => {
@@ -187,15 +204,13 @@ export default class MentorController extends BaseController {
             // if (current_user !== getUserIdFromMentorId.getDataValue("user_id")) {
             //     throw forbidden();
             // };
-            let state: any = req.query.state;
+            let state: any = newREQQuery.state;
             let whereClauseOfState: any = state && state !== 'All States' ?
-                { state: { [Op.like]: req.query.state } } :
+                { state: { [Op.like]: newREQQuery.state } } :
                 { state: { [Op.like]: `%%` } }
             if (id) {
-                const key = "PMBXDE9N53V89K65";
-                const decoded = atob(req.params.id);
-                const UNhashedPassword = CryptoJS.AES.decrypt(decoded, key).toString(CryptoJS.enc.Utf8);
-                where[`${this.model}_id`] = UNhashedPassword;
+                const deValue : any = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = JSON.parse(deValue);
                 data = await this.crudService.findOne(modelClass, {
                     attributes: {
                         include: [
@@ -296,6 +311,9 @@ export default class MentorController extends BaseController {
         }
     }
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         try {
             const { model, id } = req.params;
             if (model) {
@@ -303,7 +321,8 @@ export default class MentorController extends BaseController {
             };
             const user_id = res.locals.user_id
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded)
             const findMentorDetail = await this.crudService.findOne(modelLoaded, { where: where });
@@ -418,6 +437,9 @@ export default class MentorController extends BaseController {
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
@@ -433,6 +455,9 @@ export default class MentorController extends BaseController {
 
     //TODO: Update flag reg_status on successful changed password
     private async updatePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         const result = await this.authService.updatePassword(req.body, res);
         if (!result) {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
@@ -485,8 +510,11 @@ export default class MentorController extends BaseController {
     }
     //TODO: test this api and debug and fix any issues in testing if u see any ...!!
     private async deleteAllData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         try {
-            const { mentor_user_id } = req.params;
+            const mentor_user_id : any = await this.authService.decryptGlobal(req.params.mentor_user_id);
             // const { mobile } = req.body;
             if (!mentor_user_id) {
                 throw badRequest(speeches.USER_USERID_REQUIRED);
@@ -629,6 +657,9 @@ export default class MentorController extends BaseController {
         }
     }
     private async manualResetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         // accept the user_id or user_name from the req.body and update the password in the user table
         // perviously while student registration changes we have changed the password is changed to random generated UUID and stored and send in the payload,
         // now reset password use case is to change the password using user_id to some random generated ID and update the UUID also
@@ -729,12 +760,22 @@ export default class MentorController extends BaseController {
         });
     }
     protected async mentorpdfdata(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'&& res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         try {
             let data: any ={};
             const { model} = req.params;
-            const id = req.query.id;
-            const user_id = req.query.user_id;
-            const paramStatus: any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const id = newREQQuery.id;
+            const user_id = newREQQuery.user_id;
+            const paramStatus: any = newREQQuery.status;
             if (model) {
                 this.model = model;
             };

@@ -10,6 +10,7 @@ import { badRequest, notFound } from 'boom';
 import dispatcher from '../utils/dispatch.util';
 import { speeches } from '../configs/speeches.config';
 import { constents } from '../configs/constents.config';
+import authService from '../services/auth.service';
 
 export default class CRUDController implements IController {
     model: string = "";
@@ -17,6 +18,7 @@ export default class CRUDController implements IController {
     public statusFlagsToUse:any = []
     public router = Router();
     crudService: CRUDService = new CRUDService();
+    authService: authService = new authService;
 
     constructor() {
         this.init();
@@ -90,25 +92,33 @@ export default class CRUDController implements IController {
         findQueryOrderArr:any=[]
         ): Promise<Response | void> {
         try {
-
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
             let data: any;
             const { model, id } = req.params;
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             if (model) {
                 this.model = model;
             };
             // pagination
-            const { page, size, status } = req.query;
+            const { page, size } = newREQQuery;
             // let condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error => {
                 next(error)
             });
             const where: any = {};
-            let objwhereClauseStatusPart = this.getWhereClauseStatsPart(req);
+            let objwhereClauseStatusPart = this.getWhereClauseStatsPart(newREQQuery);
 
             if (id) {
-                where[`${this.model}_id`] = req.params.id;
+                const newParamId : any = await this.authService.decryptGlobal(req.params.id);
+                
+                where[`${this.model}_id`] = JSON.parse(newParamId);
                 data = await this.crudService.findOne(modelClass, {
                     attributes:findQueryAttrs,
                     where: {
@@ -329,7 +339,8 @@ export default class CRUDController implements IController {
             };
             const user_id = res.locals.user_id
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded)
             const data = await this.crudService.update(modelLoaded, payload, { where: where });
@@ -355,16 +366,12 @@ export default class CRUDController implements IController {
                 this.model = model;
             };
             const user_id = res.locals.user_id
-            console.log(user_id);
-
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const rawFiles: any = req.files;
             const files: any = Object.values(rawFiles);
             const file_key: any = Object.keys(rawFiles);
-            console.log(rawFiles);
-            console.log(files);
-            console.log(file_key);
             const reqData: any = req.body;
             const errs: any = [];
             for (const file_name of Object.keys(files)) {
@@ -407,7 +414,8 @@ export default class CRUDController implements IController {
                 this.model = model;
             };
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const data = await this.crudService.delete(await this.loadModel(model), { where: where });
             // if (!data) {
             //     return res.status(404).send(dispatcher(res,data, 'error'));
@@ -477,7 +485,7 @@ export default class CRUDController implements IController {
     }
 
     protected getWhereClauseStatsPart(req:Request):any{
-        const paramStatus:any = req.query.status
+        const paramStatus:any = req.query?.status ? req.query.status : false
         let whereClauseStatusPart:any = {};
         let whereClauseStatusPartLiteral = "1=1";
         let addWhereClauseStatusPart = false

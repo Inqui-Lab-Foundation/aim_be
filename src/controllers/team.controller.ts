@@ -35,6 +35,9 @@ export default class TeamController extends BaseController {
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let data: any;
             const { model, id } = req.params;
@@ -46,9 +49,16 @@ export default class TeamController extends BaseController {
                 throw forbidden()
             }
             // pagination
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
             let mentor_id:any = null
-            const { page, size,  } = req.query;
-            mentor_id =  req.query.mentor_id
+            const { page, size,  } = newREQQuery;
+            mentor_id =  newREQQuery.mentor_id
             // let condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
             let condition =  null;
             if(mentor_id){
@@ -75,7 +85,7 @@ export default class TeamController extends BaseController {
                 next(error)
             });
             const where: any = {};
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let whereClauseStatusPart: any = {};
             let whereClauseStatusPartLiteral = "1=1";
             let addWhereClauseStatusPart = false
@@ -86,7 +96,7 @@ export default class TeamController extends BaseController {
             }
             //attributes separating for challenge submission;
             let attributesNeeded: any = [];
-            const ideaStatus = req.query.ideaStatus;
+            const ideaStatus = newREQQuery.ideaStatus;
             if (ideaStatus && ideaStatus == 'true') {
                 attributesNeeded = [
                     'team_name',
@@ -152,7 +162,8 @@ export default class TeamController extends BaseController {
                 ]
             }
             if (id) {
-                where[`${this.model}_id`] = req.params.id;
+                const newParamId :any = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = JSON.parse(newParamId);
                 data = await this.crudService.findOne(modelClass, {
                     attributes: [
                         'team_name',
@@ -224,8 +235,12 @@ export default class TeamController extends BaseController {
         }
     };
     protected async getTeamMembers(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         // accept the team_id from the params and find the students details, user_id
-        const team_id = req.params.id;
+        const newParamId: any = await this.authService.decryptGlobal(req.params.id);
+        const team_id = JSON.parse(newParamId);
         if (!team_id || team_id === "") {
             return res.status(400).send(dispatcher(res, null, 'error', speeches.TEAM_NAME_ID));
         }
@@ -235,7 +250,14 @@ export default class TeamController extends BaseController {
         }
         const where: any = { team_id };
         let whereClauseStatusPart: any = {};
-        const paramStatus: any = req.query.status;
+        let newREQQuery : any = {}
+        if(req.query.Data){
+            let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+            newREQQuery  = JSON.parse(newQuery);
+        }else if(Object.keys(req.query).length !== 0){
+            return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+        }
+        const paramStatus: any = newREQQuery.status;
         if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
             whereClauseStatusPart = { "status": paramStatus }
         }
@@ -266,6 +288,9 @@ export default class TeamController extends BaseController {
      * @returns 
      */
     protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { model } = req.params;
             if (model) {
@@ -317,6 +342,9 @@ export default class TeamController extends BaseController {
         }
     }
     protected async deleteData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let deletingTeamDetails: any;
             let deletingChallengeDetails: any;
@@ -326,7 +354,8 @@ export default class TeamController extends BaseController {
                 this.model = model;
             };
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const getTeamDetails = await this.crudService.findOne(await this.loadModel(model), {
                 attributes: ["team_id", "mentor_id"],
                 where
@@ -370,8 +399,18 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getTeamsByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
-            const mentorId = req.query.mentor_id;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const mentorId = newREQQuery.mentor_id;
             const result  = await db.query(`SELECT teams.team_id, team_name, COUNT(students.team_id) as StudentCount FROM teams left JOIN students ON teams.team_id = students.team_id where mentor_id = ${mentorId} GROUP BY teams.team_id order by team_id desc`,{ type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, "success"))
         }catch (error) {
@@ -379,8 +418,18 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getNameByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
-            const mentorId = req.query.mentor_id;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const mentorId = newREQQuery.mentor_id;
             const result  = await db.query(`SELECT team_id,team_name FROM teams where mentor_id = ${mentorId} order by team_id desc;`,{ type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, "success"))
         }catch (error) {
@@ -388,8 +437,18 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getteamslistwithideastatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
-            const mentorId = req.query.mentor_id;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const mentorId = newREQQuery.mentor_id;
             const result  = await db.query(`SELECT teams.team_id,team_name,COUNT(teams.team_id) AS StudentCount,challenge_responses.status AS ideaStatus
             FROM
                 teams
@@ -406,8 +465,18 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getTeamMentor(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
-            const {team_id} = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const {team_id} = newREQQuery;
             const result  = await db.query(`SELECT team_id,team_name,moc_name,moc_gender,moc_email,moc_phone FROM teams where team_id = ${team_id};`,{ type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, "success"))
         }catch (error) {

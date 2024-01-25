@@ -31,16 +31,26 @@ export default class VideoController extends BaseController {
     }
 
     protected async getData(req:Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         // super.getData(req,res,next)
         try {
             let data: any;
             const { model, id} = req.params;
-            const paramStatus:any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const paramStatus:any = newREQQuery.status;
             if (model) {
                 this.model = model;
             };
             // pagination
-            const { page, size, title } = req.query;
+            const { page, size, title } = newREQQuery;
             let condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error=>{
@@ -62,7 +72,8 @@ export default class VideoController extends BaseController {
                 boolStatusWhereClauseRequired = true;
             }
             if (id) {
-                where[`${this.model}_id`] = req.params.id;
+                const newParamId = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = newParamId;
                 data = await this.crudService.findOne(modelClass, {
                     where: {
                         [Op.and]: [

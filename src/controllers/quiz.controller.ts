@@ -45,10 +45,21 @@ export default class QuizController extends BaseController {
      * @param next 
      */
     protected async getNextQuestion(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         try{
-            const quiz_id = req.params.id;
-            const attempts = req.query.attempts;
-            const paramStatus: any = req.query.status;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            const quiz_id = newParamId;
+            const attempts = newREQQuery.attempts;
+            const paramStatus: any = newREQQuery.status;
             const user_id = res.locals.user_id;
             let isMentorCourse = false;
             if (!quiz_id) {
@@ -195,9 +206,12 @@ export default class QuizController extends BaseController {
     }
 
     protected async submitResponse(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         try {
-
-            const quiz_id = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            const quiz_id = newParamId;
 
             const { quiz_question_id , attempts } = req.body;
             let selected_option = req.body.selected_option;
@@ -355,8 +369,18 @@ export default class QuizController extends BaseController {
     //TODO: 
 
     protected async getResult(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
         try{
-            const {user_id , quiz_id} = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const {user_id , quiz_id} = newREQQuery;
             let result: any = {}
             const totalquestions = await db.query(`SELECT count(*) as allquestions FROM quiz_questions where quiz_id = ${quiz_id} and status = 'ACTIVE'`);
             result['all'] = totalquestions[0];

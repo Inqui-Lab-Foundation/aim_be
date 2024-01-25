@@ -522,7 +522,7 @@ export default class authService {
 
                 result['data'] = {
                     id: user_res.dataValues.state_coordinators_id,
-                    role:'STATE',
+                    role:user_res.dataValues.role,
                     username: user_res.dataValues.username,
                     state_name: user_res.dataValues.state_name,
                     status: user_res.dataValues.status,
@@ -851,9 +851,7 @@ export default class authService {
             if (otp instanceof Error) {
                 throw otp;
             }
-            const key = "PMBXDE9N53V89K65"
-            const stringotp = String(otp.otp);
-            const hashedPassword = CryptoJS.AES.encrypt(stringotp, key).toString();
+            const hashedPassword = await this.encryptGlobal(JSON.stringify(otp.otp));
             result.data = hashedPassword;
             return result;
             }
@@ -1319,6 +1317,88 @@ export default class authService {
             return false
         } catch (err) {
             return err
+        }
+    }
+
+    /** encrypt code */
+    async encryptGlobal(data: any) {
+        const apikey = 'PMBXDE9N53V89K65';
+        try {
+            const encryptedValue = CryptoJS.AES.encrypt(data, apikey).toString();
+            const encoded = btoa(encryptedValue);
+            return encoded;
+        } catch (error) {
+            console.error('Encryption error:', error);
+            return error;
+        }
+    }
+
+     /** decrypt code */
+    async decryptGlobal(data: any) {
+        const apikey = 'PMBXDE9N53V89K65';
+        try {
+            const decoded = atob(data);
+            const decryptValue = CryptoJS.AES.decrypt(decoded, apikey).toString(CryptoJS.enc.Utf8);
+            return decryptValue;
+        } catch (error) {
+            console.error('Decryption error:', error);
+            return error;
+        }
+    }
+    //evaluator restpassword
+    async evaluatorResetPassword(requestBody: any) {
+        let result: any = {};
+        let eval_res: any;
+        try {
+            eval_res = await this.crudService.findOne(user, {
+                    where: { username: requestBody.username }
+                });
+            if (!eval_res) {
+                result['error'] = speeches.USER_NOT_FOUND;
+                return result;
+            }
+            const user_data = await this.crudService.findOnePassword(user, {
+                where: { user_id: eval_res.dataValues.user_id }
+            });
+    
+            let hashString = await this.generateCryptEncryption(requestBody.mobile)
+            const user_res: any = await this.crudService.updateAndFind(user, {
+                password: await bcrypt.hashSync(hashString, process.env.SALT || baseConfig.SALT)
+            }, { where: { user_id: user_data.dataValues.user_id } })
+            result['data'] = {
+                username: user_res.dataValues.username,
+                user_id: user_res.dataValues.user_id
+            };
+            return result;
+        } catch (error) {
+            result['error'] = error;
+            return result;
+        }
+    }
+    //state_coordinators restpassword
+    async stateResetPassword(requestBody: any) {
+        let result: any = {};
+        let eval_res: any;
+        try {
+            eval_res = await this.crudService.findOne(state_coordinators, {
+                    where: { state_coordinators_id: requestBody.id }
+                });
+            if (!eval_res) {
+                result['error'] = speeches.USER_NOT_FOUND;
+                return result;
+            }
+            let hashString = await this.generateCryptEncryption('ATLcode@123')
+            const user_res: any = await this.crudService.updateAndFind(state_coordinators, {
+                password: await bcrypt.hashSync(hashString, process.env.SALT || baseConfig.SALT)
+            }, { where: { state_coordinators_id: requestBody.id } })
+            result['data'] = {
+                username: user_res.dataValues.username,
+                state_coordinators_id: user_res.dataValues.state_coordinators_id
+            };
+            return result;
+        } catch (error) {
+            result['error'] = error;
+            return result;
         }
     }
 }

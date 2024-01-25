@@ -215,6 +215,7 @@ export const constents = {
   },
   TEAMS_MAX_STUDENTS_ALLOWED: 3,
   ALPHA_NUMERIC_PATTERN: /^[a-zA-Z0-9 ]*$/,
+  ONLY_DIGIT_PATTERN : /^\d+$/,
   certificate_flags: {
     list: {
       '1': '1',

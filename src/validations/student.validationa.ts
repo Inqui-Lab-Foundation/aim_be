@@ -48,10 +48,20 @@ export const studentResetPasswordSchema = Joi.object().keys({
 export const studentUpdateSchema = Joi.object().keys({
     status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
     full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN),
-    Age: Joi.string(),
-    Grade: Joi.string(),
-    team_id: Joi.string(),
-    disability: Joi.string(),
-    username:Joi.string(),
+    Age: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    Grade: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    team_id: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    disability: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    username:Joi.string().email(),
+    Gender: Joi.string().valid(...Object.values(constents.gender_flags.list))
+});
+export const studentRegSchema = Joi.object().keys({
+    status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
+    full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN),
+    Age: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    Grade: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    team_id: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    disability: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    username:Joi.string().email(),
     Gender: Joi.string().valid(...Object.values(constents.gender_flags.list))
 });

@@ -28,6 +28,7 @@ import { organization } from "../models/organization.model";
 import { evaluation_process } from "../models/evaluation_process.model";
 import { evaluator_rating } from "../models/evaluator_rating.model";
 import { evaluation_results } from "../models/evaluation_results";
+import CryptoJS from 'crypto-js';
 
 export default class ChallengeResponsesController extends BaseController {
 
@@ -60,30 +61,40 @@ export default class ChallengeResponsesController extends BaseController {
     }
 
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         let user_id = res.locals.user_id || res.locals.state_coordinators_id;
-        let { team_id } = req.query;
+        let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+        let { team_id } = newREQQuery;
         if (!user_id) {
             throw unauthorized(speeches.UNAUTHORIZED_ACCESS)
         }
         let data: any;
         let responseOfFindAndCountAll: any;
         const { model, id } = req.params;
-        const paramStatus: any = req.query.status;
-        const evaluation_status: any = req.query.evaluation_status;
-        const district: any = req.query.district;
-        const state: any = req.query.state;
-        const sub_category: any = req.query.sub_category;
-        const sdg: any = req.query.sdg;
-        const rejected_reason: any = req.query.rejected_reason;
-        const rejected_reasonSecond: any = req.query.rejected_reasonSecond;
-        const evaluator_id: any = req.query.evaluator_id;
-        const level: any = req.query.level;
-        const yetToProcessList: any = req.query.yetToProcessList;
+        const paramStatus: any = newREQQuery.status;
+        const evaluation_status: any = newREQQuery.evaluation_status;
+        const district: any = newREQQuery.district;
+        const state: any = newREQQuery.state;
+        const sub_category: any = newREQQuery.sub_category;
+        const sdg: any = newREQQuery.sdg;
+        const rejected_reason: any = newREQQuery.rejected_reason;
+        const rejected_reasonSecond: any = newREQQuery.rejected_reasonSecond;
+        const evaluator_id: any = JSON.stringify(newREQQuery.evaluator_id);
+        const level: any = newREQQuery.level;
+        const yetToProcessList: any = newREQQuery.yetToProcessList;
         if (model) {
             this.model = model;
         };
         // pagination
-        const { page, size, title } = req.query;
+        const { page, size, title } = newREQQuery;
         let condition: any = {};
         if (team_id) {
             condition = { team_id };
@@ -138,7 +149,8 @@ export default class ChallengeResponsesController extends BaseController {
             additionalFilter["sub_category"] = sub_category && typeof sub_category == 'string' ? sub_category : {}
         }
         if (id) {
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             try {
                 if (level && typeof level == 'string') {
                     switch (level) {
@@ -336,6 +348,9 @@ export default class ChallengeResponsesController extends BaseController {
                                     ],
                                     [
                                         db.literal(`(SELECT full_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id WHERE challenge_responses.team_id = \`challenge_responses\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'mentor_name'
+                                    ],
+                                    [
+                                        db.literal(`(SELECT mentorTeamOrg.category FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_responses\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'category'
                                     ]
                                 ],
                                 where: {
@@ -352,6 +367,7 @@ export default class ChallengeResponsesController extends BaseController {
                             let havingClausePart: any;
                             let groupByClausePart: any;
                             whereClauseStatusPart['evaluation_status'] = "SELECTEDROUND1";
+                            whereClauseStatusPart['final_result'] = null;
                             if (yetToProcessList) {
                                 if (yetToProcessList && yetToProcessList == 'L2') {
                                     groupByClausePart = [`challenge_response.challenge_response_id`];
@@ -404,6 +420,9 @@ export default class ChallengeResponsesController extends BaseController {
                                     ],
                                     [
                                         db.literal(`(SELECT full_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id WHERE challenge_responses.team_id = \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'mentor_name'
+                                    ],
+                                    [
+                                        db.literal(`(SELECT mentorTeamOrg.category FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_responses\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'category'
                                     ]
                                 ],
                                 where: {
@@ -542,17 +561,27 @@ export default class ChallengeResponsesController extends BaseController {
         return res.status(200).send(dispatcher(res, data, 'success'));
     };
     protected async getRandomChallenge(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EVALUATOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let challengeResponse: any;
             let evaluator_id: any;
             let whereClause: any = {};
             let whereClauseStatusPart: any = {}
             let attributesNeedFetch: any;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
 
             let user_id = res.locals.user_id;
             if (!user_id) throw unauthorized(speeches.UNAUTHORIZED_ACCESS);
 
-            let evaluator_user_id = req.query.evaluator_user_id;
+            let evaluator_user_id = newREQQuery.evaluator_user_id;
             if (!evaluator_user_id) throw unauthorized(speeches.ID_REQUIRED);
 
             let activeState = await this.crudService.findOne(evaluation_process, {
@@ -560,7 +589,7 @@ export default class ChallengeResponsesController extends BaseController {
             });
             let states = activeState.dataValues.state;
             const convertToStateArray = states.split(",");
-            const paramStatus: any = req.query.status;
+            const paramStatus: any = newREQQuery.status;
             let boolStatusWhereClauseRequired = false;
 
             if (paramStatus && (paramStatus in constents.challenges_flags.list)) {
@@ -573,7 +602,7 @@ export default class ChallengeResponsesController extends BaseController {
 
             evaluator_id = { evaluated_by: evaluator_user_id }
 
-            let level = req.query.level;
+            let level = newREQQuery.level;
             if (level && typeof level == 'string') {
                 let statesArray = states.replace(/,/g, "','")
                 switch (level) {
@@ -739,8 +768,18 @@ export default class ChallengeResponsesController extends BaseController {
 
     }
     protected async createData(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' ){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-            const { challenge_id, team_id } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const { challenge_id, team_id } = newREQQuery;
             const { responses } = req.body;
             const user_id = res.locals.user_id;
             if (!challenge_id) {
@@ -826,6 +865,9 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'EVALUATOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { model, id } = req.params;
             if (model) {
@@ -842,7 +884,8 @@ export default class ChallengeResponsesController extends BaseController {
 
             const user_id = res.locals.user_id
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
             payload['evaluated_by'] = user_id
@@ -860,13 +903,25 @@ export default class ChallengeResponsesController extends BaseController {
         }
     };
     protected async updateAnyFields(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             const { model, id } = req.params;
             if (model) {
                 this.model = model;
             };
             const {status} = req.body;
-            const {nameChange} = req.query;
+            
+            const newParamId : any = await this.authService.decryptGlobal(req.params.id);
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const {nameChange} = newREQQuery;
             let newDate = new Date();
             let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + ' ' + newDate.getHours() + ':' + newDate.getMinutes() + ':' + newDate.getSeconds();
             if (status === 'SUBMITTED'){
@@ -876,7 +931,9 @@ export default class ChallengeResponsesController extends BaseController {
             }
             const user_id = res.locals.user_id
             const where: any = {};
-            where[`${this.model}_id`] = req.params.id;
+            
+           
+            where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
             const data = await this.crudService.update(modelLoaded, payload, { where: where });
@@ -894,9 +951,20 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async initiateIdea(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' ){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-            const challenge_id = req.params.id;
-            const { team_id } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            const challenge_id = newParamId;
+            const { team_id } = newREQQuery;
             const user_id = res.locals.user_id;
             if (!challenge_id) {
                 throw badRequest(speeches.CHALLENGE_ID_REQUIRED);
@@ -944,10 +1012,31 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' ){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-            const { team_id } = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const { team_id } = newREQQuery;
             const rawfiles: any = req.files;
             const files: any = Object.values(rawfiles);
+            const allowedTypes = [
+                'image/jpeg',
+                'image/png',
+                'application/msword',
+                'application/pdf',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+            ];
+            if (!allowedTypes.includes(files[0].type)) {
+                return res.status(400).send(dispatcher(res,'','error','This file type not allowed',400)); 
+            }
             const errs: any = [];
             let attachments: any = [];
             let result: any = {};
@@ -993,6 +1082,9 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async submission(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' ){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let collectAllChallengeResponseIds: any = [];
             const findChallengeIds = await this.crudService.findAll(challenge_response);
@@ -1011,8 +1103,18 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async getResponse(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-            let { team_id} = req.query;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            let { team_id} = newREQQuery;
             if (!team_id) {
                 throw unauthorized(speeches.USER_TEAMID_REQUIRED)
             }
@@ -1022,7 +1124,7 @@ export default class ChallengeResponsesController extends BaseController {
                 this.model = model;
             };
             // pagination
-            const { page, size } = req.query;
+            const { page, size } = newREQQuery;
             let condition: any = {};
             if (team_id) {
                 condition.team_id = team_id
@@ -1033,8 +1135,9 @@ export default class ChallengeResponsesController extends BaseController {
             });
             const where: any = {};
             if (id) {
-                where[`${this.model}_id`] = req.params.id;
-                console.log(where)
+                const newParamId = await this.authService.decryptGlobal(req.params.id);
+                where[`${this.model}_id`] = newParamId;
+             
                 data = await this.crudService.findOne(challenge_response, {
                     attributes: [
                         [
@@ -1153,8 +1256,18 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     private async clearResponse(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-            const { team_id } = req.query
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const { team_id } = newREQQuery
             if (!team_id) {
                 throw badRequest(speeches.TEAM_NAME_ID)
             };
@@ -1175,19 +1288,30 @@ export default class ChallengeResponsesController extends BaseController {
         }
     };
     private async getChallengesForEvaluator(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EVALUATOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
             let data: any = [];
             let whereClauseEvaluationStatus: any = {};
             let additionalFilter: any = {};
             let districtFilter: any = {};
-            const evaluator_id: any = req.params.evaluator_id
-            const evaluation_status: any = req.query.evaluation_status;
-            const district: any = req.query.district;
-            const sdg: any = req.query.sdg;
-            const state: any = req.query.state;
-            const rejected_reason: any = req.query.rejected_reason;
-            const rejected_reasonSecond: any = req.query.rejected_reasonSecond;
-            const level: any = req.query.level;
+            const newParamEvaluatorId = await this.authService.decryptGlobal(req.params.evaluator_id);
+            const evaluator_id: any = newParamEvaluatorId
+            const evaluation_status: any = newREQQuery.evaluation_status;
+            const district: any = newREQQuery.district;
+            const sdg: any = newREQQuery.sdg;
+            const state: any = newREQQuery.state;
+            const rejected_reason: any = newREQQuery.rejected_reason;
+            const rejected_reasonSecond: any = newREQQuery.rejected_reasonSecond;
+            const level: any = newREQQuery.level;
             if (!evaluator_id) {
                 throw badRequest(speeches.TEAM_NAME_ID)
             };
@@ -1353,8 +1477,18 @@ export default class ChallengeResponsesController extends BaseController {
         }
     };
     private async getChallengesBasedOnFilter(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EVALUATOR' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
-            const { district, sdg } = req.query
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const { district, sdg } = newREQQuery
             let whereClause: any = {}
             if (district) {
                 whereClause['district'] = district && typeof district == 'string' ? district : {}
@@ -1363,7 +1497,7 @@ export default class ChallengeResponsesController extends BaseController {
                 whereClause['sdg'] = sdg && typeof sdg == 'string' ? sdg : {}
             }
             // whereClauseOfSdg['sdg'] = { [Op.like]: sdg && typeof district == 'string' ? sdg : `%%` }
-            console.log(whereClause);
+          
             const data = await this.crudService.findAll(challenge_response, {
                 attributes: [
                     "challenge_response_id",
@@ -1422,18 +1556,28 @@ export default class ChallengeResponsesController extends BaseController {
         }
     };
     private async finalEvaluation(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let user_id = res.locals.user_id;
             if (!user_id) {
                 throw unauthorized(speeches.UNAUTHORIZED_ACCESS)
             }
-            let key: any = req.query.key;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            let key: any = newREQQuery.key;
             let data: any;
-            const paramStatus: any = req.query.status;
-            const district: any = req.query.district;
-            const sdg: any = req.query.sdg;
-            const level: any = req.query.level;
-            const { page, size } = req.query;
+            const paramStatus: any = newREQQuery.status;
+            const district: any = newREQQuery.district;
+            const sdg: any = newREQQuery.sdg;
+            const level: any = newREQQuery.level;
+            const { page, size } = newREQQuery;
             const { limit, offset } = this.getPagination(page, size);
             const where: any = {};
             let whereClauseStatusPart: any = {}
@@ -1503,12 +1647,15 @@ export default class ChallengeResponsesController extends BaseController {
                     ],
                     [
                         db.literal(`(SELECT full_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id WHERE challenge_responses.team_id = \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'mentor_name'
+                    ],
+                    [
+                        db.literal(`(SELECT mentorTeamOrg.category FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'category'
                     ]
                 ],
                 where: {
                     [Op.and]: [
                         whereClauseStatusPart,
-                        where.liter,
+                       where.liter,
                     ]
                 },
                 include: [{
@@ -1581,18 +1728,29 @@ export default class ChallengeResponsesController extends BaseController {
         }
     };
     private async evaluationResult(req: Request, res: Response, next: NextFunction) {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try {
             let user_id = res.locals.user_id;
             if (!user_id) {
                 throw unauthorized(speeches.UNAUTHORIZED_ACCESS)
             }
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+
             let data: any;
             let response: any;
-            const paramStatus: any = req.query.status;
-            const district: any = req.query.district;
-            const sdg: any = req.query.sdg;
-            const level: any = req.query.level;
-            const { page, size } = req.query;
+            const paramStatus: any = newREQQuery.status;
+            const district: any = newREQQuery.district;
+            const sdg: any = newREQQuery.sdg;
+            const level: any = newREQQuery.level;
+            const { page, size } = newREQQuery;
             const { limit, offset } = this.getPagination(page, size);
             const where: any = {};
             let whereClauseStatusPart: any = {}
@@ -1740,8 +1898,18 @@ export default class ChallengeResponsesController extends BaseController {
         return 'nothing'
     }
     protected async getideastatusbyteamid(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
         try{
-            const teamId = req.query.team_id;
+            let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
+            const teamId = newREQQuery.team_id;
             const result  = await db.query(`select  ifnull((select status  FROM challenge_responses where team_id = ${teamId}),'No Idea')ideaStatus`,{ type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, "success"))
         }catch (error) {
@@ -1749,6 +1917,16 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async getSchoolPdfIdeaStatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
+        let newREQQuery : any = {}
+            if(req.query.Data){
+                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery  = JSON.parse(newQuery);
+            }else if(Object.keys(req.query).length !== 0){
+                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            }
         try{
             const result  = await db.query(`SELECT 
             teams.team_id,
@@ -1761,7 +1939,7 @@ export default class ChallengeResponsesController extends BaseController {
                 LEFT JOIN
             challenge_responses AS ch ON teams.team_id = ch.team_id
         WHERE
-            mentor_id = ${req.query.mentor_id}
+            mentor_id = ${newREQQuery.mentor_id}
         GROUP BY teams.team_id;`,{ type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, "success"))
         }catch (error) {
