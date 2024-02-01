@@ -174,8 +174,8 @@ export default class SupportTicketController extends BaseController {
             const modelLoaded = await this.loadModel(model);
             let payload: any = req.body;
             payload['updated_by'] = user_id;
-            const newParamId = await this.authService.decryptGlobal(req.params.id);
-            where[`${this.model}_id`] = newParamId;
+            const newParamId :any = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = JSON.parse(newParamId);
             const data = await this.crudService.update(modelLoaded, payload, { where: where });
             if (!data) {
                 throw badRequest()
