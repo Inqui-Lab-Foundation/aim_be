@@ -1923,7 +1923,13 @@ export default class ReportController extends BaseController {
             overall_score AS 'Overall score',
             quality_score AS 'Quality score',
             feasibility_score AS 'Feasibility score',
-            final_result
+            final_result,
+            novelty,
+            useful,
+            feasibility,
+            scalability,
+            sustainability,
+            eval_count
         FROM
             idea_report
             where evaluation_status = 'SELECTEDROUND1' && state like ${stateFilter} && district like ${districtFilter} && sdg like ${themesFilter} && category like ${categoryFilter};`, { type: QueryTypes.SELECT });
@@ -1990,7 +1996,12 @@ export default class ReportController extends BaseController {
             overall_score AS 'Overall score',
             quality_score AS 'Quality score',
             feasibility_score AS 'Feasibility score',
-            final_result
+            final_result,
+            novelty,
+            useful,
+            feasibility,
+            scalability,
+            sustainability
         FROM
             idea_report
             where final_result <>'null' && state like ${stateFilter} && district like ${districtFilter} && sdg like ${themesFilter} && category like ${categoryFilter};`, { type: QueryTypes.SELECT });
