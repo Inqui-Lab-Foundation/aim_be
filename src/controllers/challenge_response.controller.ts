@@ -29,6 +29,7 @@ import { evaluation_process } from "../models/evaluation_process.model";
 import { evaluator_rating } from "../models/evaluator_rating.model";
 import { evaluation_results } from "../models/evaluation_results";
 import CryptoJS from 'crypto-js';
+import { baseConfig } from "../configs/base.config";
 
 export default class ChallengeResponsesController extends BaseController {
 
@@ -372,13 +373,13 @@ export default class ChallengeResponsesController extends BaseController {
                                 if (yetToProcessList && yetToProcessList == 'L2') {
                                     groupByClausePart = [`challenge_response.challenge_response_id`];
                                     havingClausePart = db.Sequelize.where(db.Sequelize.fn('count', db.Sequelize.col(`evaluator_ratings.challenge_response_id`)), {
-                                        [Op.lt]: 3
+                                        [Op.lt]: baseConfig.EVAL_FOR_L2
                                     })
                                 }
                             } else {
                                 groupByClausePart = [`evaluator_ratings.challenge_response_id`];
                                 havingClausePart = db.Sequelize.where(db.Sequelize.fn('count', db.Sequelize.col(`evaluator_ratings.challenge_response_id`)), {
-                                    [Op.gte]: 3
+                                    [Op.gte]: baseConfig.EVAL_FOR_L2
                                 })
                             }
                             responseOfFindAndCountAll = await this.crudService.findAndCountAll(modelClass, {

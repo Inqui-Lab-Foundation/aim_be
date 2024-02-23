@@ -1923,7 +1923,13 @@ export default class ReportController extends BaseController {
             overall_score AS 'Overall score',
             quality_score AS 'Quality score',
             feasibility_score AS 'Feasibility score',
-            final_result
+            final_result,
+            novelty,
+            useful,
+            feasibility,
+            scalability,
+            sustainability,
+            eval_count
         FROM
             idea_report
             where evaluation_status = 'SELECTEDROUND1' && state like ${stateFilter} && district like ${districtFilter} && sdg like ${themesFilter} && category like ${categoryFilter};`, { type: QueryTypes.SELECT });
@@ -1990,7 +1996,12 @@ export default class ReportController extends BaseController {
             overall_score AS 'Overall score',
             quality_score AS 'Quality score',
             feasibility_score AS 'Feasibility score',
-            final_result
+            final_result,
+            novelty,
+            useful,
+            feasibility,
+            scalability,
+            sustainability
         FROM
             idea_report
             where final_result <>'null' && state like ${stateFilter} && district like ${districtFilter} && sdg like ${themesFilter} && category like ${categoryFilter};`, { type: QueryTypes.SELECT });
@@ -2193,7 +2204,7 @@ export default class ReportController extends BaseController {
             const summary = await db.query(`SELECT 
             challenge_response_id,
             AVG(overall) AS overall,
-            (AVG(param_1) + AVG(param_2)) / 3 AS Quality,
+            (AVG(param_1) + AVG(param_2)) / 2 AS Quality,
             (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS Feasibility
         FROM
             evaluator_ratings
@@ -2246,7 +2257,7 @@ export default class ReportController extends BaseController {
             SELECT 
     cal.challenge_response_id,
     AVG(overall) AS overall,
-    (AVG(param_1) + AVG(param_2)) / 3 AS Quality,
+    (AVG(param_1) + AVG(param_2)) / 2 AS Quality,
     (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS Feasibility
 FROM
     evaluator_ratings AS evl_r
